@@ -15,7 +15,8 @@ const props = withDefaults(defineProps<{
     class?: HTMLAttributes['class']
     type?: 'default' | 'advanced',
     dateFormatter?: DateFormatter,
-    openOnSelect?: boolean
+    openOnSelect?: boolean,
+    withoutNow?: boolean
 }>(), {
     defaultValue: null,
     modelValue: null,
@@ -23,7 +24,8 @@ const props = withDefaults(defineProps<{
     dateFormatter: new DateFormatter('el-GR', {
         dateStyle: 'short',
     }),
-    openOnSelect: false
+    openOnSelect: false,
+    withoutNow: false
 })
 
 const emits = defineEmits<{
@@ -59,6 +61,10 @@ const calendarChange = (date?: DateValue) => {
     }
 }
 
+const setNow = () => {
+    modelValue.value = new Date(Date.now())
+}
+
 const open = ref(false)
 
 </script>
@@ -75,6 +81,8 @@ const open = ref(false)
             >
                 <CalendarIcon class="mr-2 h-4 w-4" />
                 {{ value ? dateFormatter.format(value.toDate(getLocalTimeZone())) : "Pick a date" }}
+
+                <Button type="button" class="ms-auto" v-if="!withoutNow" size="xs" @click.stop="setNow()" >Now</Button>
             </Button>
         </PopoverTrigger>
         <PopoverContent class="w-auto p-0">
