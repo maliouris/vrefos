@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import {Baby, BookOpen, Home, LogOut, Menu} from 'lucide-vue-next'
-
-import {Badge} from '@/components/ui/badge'
 import {Button} from '@/components/ui/button'
 import {Sheet, SheetContent, SheetTrigger} from '@/components/ui/sheet'
 import {MenuItem} from "@/components/ui/menu-item";
@@ -71,17 +69,11 @@ import {Link} from '@inertiajs/vue3';
                             >
                                 <Baby class="h-4 w-4" />
                                 Babies
-                                <Badge class="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                                    6
-                                </Badge>
                             </MenuItem><MenuItem
                             route-name="baby_actions.create"
                         >
                             <BookOpen class="h-4 w-4" />
                             Baby Actions
-                            <Badge class="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                                6
-                            </Badge>
                         </MenuItem>
                         </nav>
                     </SheetContent>
