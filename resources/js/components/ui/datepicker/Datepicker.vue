@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Calendar} from "@/components/ui/calendar";
-import {computed, HTMLAttributes} from "vue";
+import {computed, HTMLAttributes, ref} from "vue";
 import {useVModel} from "@vueuse/core";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {CalendarDateTime, DateFormatter, type DateValue, getLocalTimeZone} from "@internationalized/date";
@@ -10,18 +10,20 @@ import {Button} from "@/components/ui/button";
 
 
 const props = withDefaults(defineProps<{
-    defaultValue?: Date
-    modelValue?: Date
+    defaultValue?: Date | null
+    modelValue?: Date | null
     class?: HTMLAttributes['class']
     type?: 'default' | 'advanced',
-    dateFormatter?: DateFormatter
+    dateFormatter?: DateFormatter,
+    openOnSelect?: boolean
 }>(), {
     defaultValue: null,
     modelValue: null,
     type: 'default',
     dateFormatter: new DateFormatter('el-GR', {
         dateStyle: 'short',
-    })
+    }),
+    openOnSelect: false
 })
 
 const emits = defineEmits<{
@@ -43,21 +45,26 @@ const value = computed(() => {
     return undefined
 })
 
+const popover = ref<Popover>(null)
+
 const calendarChange = (date?: DateValue) => {
     const newDate = date ? new Date(date.toString()) : null
     if (newDate) {
-        newDate.setHours(value.value?.hour ?? 0)
-        newDate.setMinutes(value.value?.minute ?? 0)
-        newDate.setSeconds(value.value?.second ?? 0)
+        newDate.setHours(value.value?.hour ?? 0, value.value?.minute ?? 0, value.value?.second ?? 0)
     }
 
     modelValue.value = newDate
+    if (!props.openOnSelect) {
+        open.value = false
+    }
 }
+
+const open = ref(false)
 
 </script>
 
 <template>
-    <Popover>
+    <Popover v-model:open="open">
         <PopoverTrigger as-child>
             <Button
                 variant="outline"

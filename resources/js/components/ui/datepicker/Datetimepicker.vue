@@ -59,7 +59,7 @@ const df = new DateFormatter('el-GR', {
 </script>
 
 <template>
-    <Datepicker :date-formatter="df" :type="type" :model-value="modelValue" @update:model-value="calendarChange($event)">
+    <Datepicker open-on-select :date-formatter="df" :type="type" :model-value="modelValue" @update:model-value="calendarChange($event)">
         <div class="flex items-center justify-center py-3">
             <Timepicker v-model="modelValue" />
         </div>
