@@ -6,6 +6,7 @@ import {Head, useForm} from '@inertiajs/vue3';
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
+import {Password} from "@/components/ui/password";
 
 defineProps<{
     canResetPassword?: boolean;
@@ -61,10 +62,9 @@ const submit = () => {
             <div class="mt-4">
                 <InputLabel for="password" value="Password" />
 
-                <Input
+                <Password
                     id="password"
-                    type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-full"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
