@@ -9,7 +9,17 @@ import {Button} from "@/components/ui/button";
 
 
 const submit = () => {
-    form.patch(route('babies.update', props.baby));
+    form.transform((data) => {
+        const birthDate = data.birth_date
+        const birthDateFormatted = `${birthDate.getFullYear()}-${birthDate.getMonth() + 1}-${birthDate.getDate()}`
+
+        return {
+            ...data,
+            birth_date: birthDateFormatted
+        }
+    }).patch(route('babies.update', {
+        id: props.baby.id
+    }));
 };
 
 const props = defineProps<{
