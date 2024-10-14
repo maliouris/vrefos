@@ -95,7 +95,7 @@ defineProps<{
             </div>
 
             <div>
-                <InputLabel for="finished_at" value="Started at" />
+                <InputLabel for="finished_at" value="Finished at" />
 
                 <Datetimepicker
                     id="finished_at"
