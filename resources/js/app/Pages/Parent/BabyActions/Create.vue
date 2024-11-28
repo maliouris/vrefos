@@ -48,7 +48,7 @@ defineProps<{
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
-                            <SelectItem v-for="baby in babies" :value="baby.id">
+                            <SelectItem v-for="baby in babies" :value="baby.id.toString()">
                                 {{baby.name}}
                             </SelectItem>
                         </SelectGroup>
@@ -78,7 +78,7 @@ defineProps<{
                     </SelectContent>
                 </Select>
 
-                <InputError class="mt-2" :message="form.errors.type" />
+                <InputError class="mt-2" :message="form.errors.baby_action_type_id" />
             </div>
 
             <div>
