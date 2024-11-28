@@ -5,6 +5,9 @@ export type PageProps<T extends Record<string, unknown> = Record<string, unknown
     auth: {
         user: models.User;
     };
+    pusher: {
+        id: string
+    },
     appName: string;
     ziggy: Config & { location: string };
 };
