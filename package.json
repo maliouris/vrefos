@@ -3,7 +3,7 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vue-tsc && vite build && vite build --ssr"
+        "build": "vite build && vite build --ssr"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^1.0.0",
@@ -23,6 +23,7 @@
         "vue-tsc": "^2.0.24"
     },
     "dependencies": {
+        "@pusher/push-notifications-web": "^1.1.0",
         "@tanstack/vue-table": "^8.20.5",
         "@vee-validate/zod": "^4.13.2",
         "@vueuse/core": "^11.1.0",
