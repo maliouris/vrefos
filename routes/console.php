@@ -1,5 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Console\Commands\SendBabyActionsReminders;
+use Illuminate\Support\Facades\Schedule;
 
+Schedule::command(SendBabyActionsReminders::class)->everyMinute();
