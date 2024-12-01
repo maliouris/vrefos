@@ -35,6 +35,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user()?->load('babies') ?? null,
             ],
+            'pusher' => [
+                'id' => config('pusher.id')
+            ],
             'appName' => config('app.name'),
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),

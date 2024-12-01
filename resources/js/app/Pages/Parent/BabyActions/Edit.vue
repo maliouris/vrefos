@@ -46,7 +46,7 @@ const submit = () => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectItem v-for="baby in babies" :value="baby.id">
+                        <SelectItem v-for="baby in babies" :value="baby.id.toString()">
                             {{baby.name}}
                         </SelectItem>
                     </SelectGroup>
@@ -69,14 +69,14 @@ const submit = () => {
                 </SelectTrigger>
                 <SelectContent>
                     <SelectGroup>
-                        <SelectItem v-for="babyActionType in babyActionTypes" :value="babyActionType.id">
+                        <SelectItem v-for="babyActionType in babyActionTypes" :value="babyActionType.id.toString()">
                             {{babyActionType.name}}
                         </SelectItem>
                     </SelectGroup>
                 </SelectContent>
             </Select>
 
-            <InputError class="mt-2" :message="form.errors.type" />
+            <InputError class="mt-2" :message="form.errors.baby_action_type_id" />
         </div>
 
         <div class="mt-4">

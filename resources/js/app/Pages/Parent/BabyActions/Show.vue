@@ -25,7 +25,7 @@ const columns = [
         header: 'Baby name',
         cell: ({ row }) => h('div', { }, row.original.baby.name),
     }),
-    columnHelper.accessor('type', {
+    columnHelper.accessor('baby_action_type.name', {
         enablePinning: true,
         header: 'Action type',
         cell: ({ row }) => h('div', {}, row.original.baby_action_type.name),

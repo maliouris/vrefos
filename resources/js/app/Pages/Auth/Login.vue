@@ -2,16 +2,20 @@
 import GuestLayout from '@/app/Layouts/GuestLayout.vue';
 import InputError from '@/app/Components/InputError.vue';
 import InputLabel from '@/app/Components/InputLabel.vue';
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, useForm, usePage} from '@inertiajs/vue3';
 import {Input} from "@/app/components/ui/input";
 import {Button} from "@/app/components/ui/button";
 import {Checkbox} from "@/app/components/ui/checkbox";
 import {Password} from "@/app/components/ui/password";
+import {inject} from "vue";
+import {PUSH_NOTIFICATIONS} from "@/app/injection-keys";
 
 defineProps<{
     canResetPassword?: boolean;
     status?: string;
 }>();
+
+const pushNotificationService = inject(PUSH_NOTIFICATIONS)!
 
 const form = useForm({
     email: '',
@@ -21,6 +25,9 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('login'), {
+        onSuccess: () => {
+          pushNotificationService.connect(usePage().props.auth.user)
+        },
         onFinish: () => {
             form.reset('password');
         },

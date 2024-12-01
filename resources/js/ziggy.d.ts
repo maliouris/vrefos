@@ -21,11 +21,25 @@ declare module 'ziggy-js' {
     "babies.store": [],
     "babies.show": [],
     "baby_actions.create": [],
+    "baby_actions.update": [
+        {
+            "name": "babyAction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
+    "baby_actions.edit": [
+        {
+            "name": "babyAction",
+            "required": true,
+            "binding": "id"
+        }
+    ],
     "baby_actions.store": [],
+    "baby_actions.show": [],
     "profile.edit": [],
     "profile.update": [],
     "profile.destroy": [],
-    "register": [],
     "login": [],
     "password.request": [],
     "password.email": [],
@@ -36,18 +50,6 @@ declare module 'ziggy-js' {
         }
     ],
     "password.store": [],
-    "verification.notice": [],
-    "verification.verify": [
-        {
-            "name": "id",
-            "required": true
-        },
-        {
-            "name": "hash",
-            "required": true
-        }
-    ],
-    "verification.send": [],
     "password.confirm": [],
     "password.update": [],
     "logout": []
