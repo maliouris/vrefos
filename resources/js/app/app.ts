@@ -6,6 +6,7 @@ import {createInertiaApp} from '@inertiajs/vue3';
 import {resolvePageComponent} from 'laravel-vite-plugin/inertia-helpers';
 import {ZiggyVue} from 'ziggy-js';
 import ParentLayout from "@/app/Layouts/ParentPanelLayout.vue";
+import {PushNotificationPlugin} from "@/app/plugins/push-notification-plugin";
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -20,9 +21,12 @@ createInertiaApp({
         return page
     },
     setup({ el, App, props, plugin }) {
+        const pageProps = props.initialPage.props
+        
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(PushNotificationPlugin, {clientInstanceId: pageProps.pusher.id, user: pageProps.auth.user})
             .mount(el);
     },
     progress: {

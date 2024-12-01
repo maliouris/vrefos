@@ -4,9 +4,11 @@ import {Button} from '@/app/components/ui/button'
 import {Sheet, SheetContent, SheetTrigger} from '@/app/components/ui/sheet'
 import {MenuItem} from "@/app/components/ui/menu-item";
 import {Link} from '@inertiajs/vue3';
-import {ref} from "vue";
+import {inject, ref} from "vue";
+import {PUSH_NOTIFICATIONS} from "@/app/injection-keys";
 
 const sheetOpen = ref(false)
+const pushNotificationService = inject(PUSH_NOTIFICATIONS)!;
 </script>
 
 <template>
@@ -14,7 +16,7 @@ const sheetOpen = ref(false)
         <div class="hidden border-r bg-muted/40 md:block">
             <div class="flex h-full max-h-screen flex-col gap-2">
                 <div class="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                    <a href="/public" class="flex items-center gap-2 font-semibold">
+                    <a href="/" class="flex items-center gap-2 font-semibold">
                         <!--                        <Baby class="h-6 w-6" />-->
                         <span class="">{{ $page.props.appName }}</span>
                     </a>
@@ -87,12 +89,12 @@ const sheetOpen = ref(false)
                     <!--                                type="search"-->
                     <!--                                placeholder="Search products..."-->
                     <!--                                class="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"-->
-                    <!--                            />-->
+                    <!--                             />-->
                     <!--                        </div>-->
                     <!--                    </form>-->
                 </div>
                 <span class="text-sm">Hi, {{ $page.props.auth.user.name }}</span>
-                <Link :href="route('logout')" method="post" as="button" type="button">
+                <Link @click="pushNotificationService.disconnect().catch(console.error);" :href="route('logout')" method="post" as="button" type="button">
                     <LogOut/>
                 </Link>
                 <!--                <DropdownMenu>-->
