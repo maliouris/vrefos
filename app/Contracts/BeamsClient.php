@@ -4,7 +4,7 @@ namespace App\Contracts;
 
 use Pusher\PushNotifications\PushNotifications;
 
-abstract class BeamsClient extends PushNotifications
+class BeamsClient extends PushNotifications
 {
 
 }

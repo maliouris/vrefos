@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Contracts\BeamsClient;
+use App\Contracts\PushNotifications;
+use App\Services\BeamsNotificationsService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,11 +14,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(BeamsClient::class, fn () => new \Pusher\PushNotifications\PushNotifications([
+        $this->app->singleton(BeamsClient::class, fn () => new BeamsClient([
                 "instanceId" => config('pusher.id'),
                 "secretKey" => config('pusher.key'),
             ]
         ));
+
+        $this->app->singleton(PushNotifications::class, BeamsNotificationsService::class);
     }
 
     /**
