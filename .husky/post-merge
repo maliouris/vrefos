@@ -1,5 +1,5 @@
 #!/bin/sh
-gone_branches=$(git branch -vv | grep ': gone]' | awk '{print $1}')
+gone_branches=$(git branch -vv | grep ': gone]' | awk '{print ($1 == "+" || $1 == "*") ? $2 : $1}')
 
 for branch in $gone_branches; do
     worktree_path=$(git worktree list --porcelain | awk -v b="refs/heads/$branch" '
