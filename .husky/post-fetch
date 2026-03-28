@@ -1,6 +1,4 @@
 #!/bin/sh
-git fetch --prune 2>/dev/null
-
 gone_branches=$(git branch -vv | grep ': gone]' | awk '{print $1}')
 
 for branch in $gone_branches; do
