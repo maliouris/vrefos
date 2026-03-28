@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Livewire\Pages\Profile;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+#[Layout('layouts.app')]
+class Edit extends Component
+{
+    public string $name = '';
+    public string $email = '';
+    public string $current_password = '';
+    public string $password = '';
+    public string $password_confirmation = '';
+    public string $delete_password = '';
+
+    public function mount(): void
+    {
+        $this->name = auth()->user()->name;
+        $this->email = auth()->user()->email;
+    }
+
+    public function updateProfile(): void
+    {
+        $user = auth()->user();
+
+        $this->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ]);
+
+        $user->fill(['name' => $this->name, 'email' => $this->email]);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        session()->flash('profile_success', 'Profile updated successfully.');
+    }
+
+    public function updatePassword(): void
+    {
+        $this->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        auth()->user()->update([
+            'password' => Hash::make($this->password),
+        ]);
+
+        $this->reset('current_password', 'password', 'password_confirmation');
+
+        session()->flash('password_success', 'Password updated successfully.');
+    }
+
+    public function deleteAccount(): void
+    {
+        $this->validate([
+            'delete_password' => ['required', 'current_password'],
+        ]);
+
+        $user = auth()->user();
+
+        Auth::logout();
+
+        $user->delete();
+
+        session()->invalidate();
+        session()->regenerateToken();
+
+        $this->redirect('/', navigate: true);
+    }
+
+    public function render()
+    {
+        return view('livewire.pages.profile.edit');
+    }
+}
