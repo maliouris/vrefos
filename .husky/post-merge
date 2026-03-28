@@ -1,0 +1,16 @@
+#!/bin/sh
+gone_branches=$(git branch -vv | grep ': gone]' | awk '{print ($1 == "+" || $1 == "*") ? $2 : $1}')
+
+for branch in $gone_branches; do
+    worktree_path=$(git worktree list --porcelain | awk -v b="refs/heads/$branch" '
+        /^worktree / { wt = $2 }
+        $0 == "branch " b { print wt }
+    ')
+
+    if [ -n "$worktree_path" ]; then
+        echo "Removing worktree: $worktree_path"
+        git worktree remove --force "$worktree_path"
+    fi
+
+    git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
+done
