@@ -108,3 +108,7 @@ Test database is created automatically by Sail's MySQL init script.
 
 PHP: Laravel Pint (run `./vendor/bin/sail pint` before committing).
 TypeScript: vue-tsc enforces type checking during build.
+
+## Documentation Lookup
+
+When looking up docs for any library, framework, SDK, API, or CLI tool, always use **Context7 MCP** first (`resolve-library-id` → `query-docs`). Do not fall back to web search without explicitly asking the user for permission first.
