@@ -37,21 +37,24 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 
 ### Backend
 
-- `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionType`
+- `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionType`, `NotificationSetting`
 - `app/Services/BabyActionsService.php` — Sends reminders via push notifications
 - `app/Services/BeamsNotificationsService.php` — Pusher Beams implementation of `PushNotifications` contract
 - `app/Services/BeamsClientService.php` — Pusher Beams SDK client wrapper
 - `app/Contracts/PushNotifications.php` — Interface for push notification backends
-- `app/Console/Commands/SendBabyActionsReminders.php` — Scheduled command: fires when `finished_at` > 2h45m ago and `reminders < 1`
+- `app/Console/Commands/SendBabyActionsReminders.php` — Scheduled command: for each unreminded finished action, looks up the user's `NotificationSetting` for that action type; skips if disabled or threshold not reached; increments `reminders` after sending
 - `app/Enums/Gender.php` — `male` / `female`
 
 ### Data Model
 
 ```
 User → hasMany → Baby → hasMany → BabyAction → belongsTo → BabyActionType
+User → hasMany → NotificationSetting → belongsTo → BabyActionType
 ```
 
 `BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `reminders` (int, default 0)
+
+`NotificationSetting` fields: `user_id`, `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180). Unique on `(user_id, baby_action_type_id)`. Created automatically via `firstOrCreate` on first page visit or first reminder run.
 
 ### Frontend
 
@@ -77,6 +80,7 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | Form | `<x-mary-form>` |
 | Alert | `<x-mary-alert>` |
 | Toast | `<x-mary-toast>` |
+| Toggle | `<x-mary-toggle>` |
 | Nav/layout | `<x-mary-nav>`, `<x-mary-main>`, `<x-mary-menu>`, `<x-mary-menu-item>` |
 
 ### Routes (web.php)
@@ -90,6 +94,7 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | GET | `/baby_actions/add` | `baby_actions.create` | `Pages\BabyAction\Create` |
 | GET | `/baby_actions/{babyAction}/edit` | `baby_actions.edit` | `Pages\BabyAction\Edit` |
 | GET | `/profile` | `profile.edit` | `Pages\Profile\Edit` |
+| GET | `/notification-settings` | `notification-settings.edit` | `Pages\NotificationSettings\Index` |
 | GET | `/pusher/beams-auth` | `pusher.beams.auth` | — |
 
 Root `/` redirects to `/babies`.
@@ -98,12 +103,15 @@ Root `/` redirects to `/babies`.
 
 Reminders are sent via Pusher Beams push notifications:
 
-1. The artisan command `app:send-baby-action-reminder` queries `baby_actions` where `finished_at < now() - 2h45m` and `reminders < 1`.
-2. `BabyActionsService::sendReminder()` dispatches a push notification to the baby's parent and increments `reminders`.
-3. The `PushNotifications` contract is implemented by `BeamsNotificationsService`, injected via the service container.
-4. The frontend registers with Beams via `window.registerPushNotifications()` in `resources/js/app.js`.
+1. The artisan command `app:send-baby-action-reminder` runs every minute (scheduled in `routes/console.php`).
+2. It fetches all finished `baby_actions` with `reminders < 1`, eager-loading `baby.user` and `babyActionType`.
+3. For each action it calls `NotificationSetting::firstOrCreate()` with the action's user + action type — defaults to `enabled=true`, `notify_after_minutes=180` (3 hours).
+4. Skips if `enabled = false` or elapsed minutes since `finished_at` < `notify_after_minutes`.
+5. `BabyActionsService::sendReminder()` dispatches the push notification and increments `reminders`.
+6. The `PushNotifications` contract is implemented by `BeamsNotificationsService`, injected via the service container.
+7. The frontend registers with Beams via `window.registerPushNotifications()` in `resources/js/app.js`.
 
-Schedule this command via Laravel's scheduler or a cron job to run every minute.
+Users configure their notification preferences at `/notification-settings` (one setting per action type: Eat, Sleep).
 
 ## Testing
 

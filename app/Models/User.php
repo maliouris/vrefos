@@ -49,4 +49,9 @@ class User extends Authenticatable
     public function babies(): HasMany {
         return $this->hasMany(Baby::class);
     }
+
+    public function notificationSettings(): HasMany
+    {
+        return $this->hasMany(NotificationSetting::class);
+    }
 }

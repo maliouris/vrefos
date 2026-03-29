@@ -36,6 +36,7 @@
             <x-mary-menu activate-by-route>
                 <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
                 <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="{{ route('notification-settings.edit') }}" />
             </x-mary-menu>
         </x-slot:sidebar>
 

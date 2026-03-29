@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/baby_actions/{babyAction}/edit', BabyActionEdit::class)->name('baby_actions.edit');
 
     Route::get('/profile', ProfileEdit::class)->name('profile.edit');
+
+    Route::get('/notification-settings', \App\Livewire\Pages\NotificationSettings\Index::class)->name('notification-settings.edit');
 });
 
 Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));
