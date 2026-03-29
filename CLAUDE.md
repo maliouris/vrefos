@@ -7,13 +7,10 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 ## Tech Stack
 
 - **Backend:** PHP 8.2+, Laravel 13, Laravel Sanctum, Laravel Sail (Docker)
-- **Frontend:** Vue 3 (Composition API), TypeScript, Inertia v2 (SSR enabled), Tailwind CSS v3
+- **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
 - **Database:** MySQL 8.0 (via Sail)
 - **Push Notifications:** Pusher Beams (`pusher/pusher-push-notifications`, `@pusher/push-notifications-web`)
-- **UI:** Radix Vue, shadcn-style components, Lucide icons, TanStack Table
-- **Forms:** vee-validate + Zod
-- **Routing:** Ziggy (Laravel routes in JS)
-- **Dev tools:** Vite, vue-tsc, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
+- **Dev tools:** Vite + `@tailwindcss/vite`, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
 
 ## Running the Project
 
@@ -21,7 +18,7 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 ./vendor/bin/sail up -d          # Start Docker containers
 ./vendor/bin/sail artisan migrate
 ./vendor/bin/sail npm run dev    # Vite dev server
-./vendor/bin/sail npm run build  # Production build (also runs vue-tsc + SSR build)
+./vendor/bin/sail npm run build  # Production build
 ```
 
 ## Key Commands
@@ -58,30 +55,44 @@ User → hasMany → Baby → hasMany → BabyAction → belongsTo → BabyActio
 
 ### Frontend
 
-- `resources/js/app/Pages/` — Inertia page components (Vue SFC)
-- `resources/js/app/services/` — `beams-notification-service.ts`, `push-notifications-service.ts`
-- `resources/js/pusher/client.ts` — Pusher Beams client initialisation
-- `resources/js/app/components/` & `Components/` — Reusable Vue components
-- `resources/js/app/Layouts/` — App layouts
-- SSR entry: `resources/js/app/ssr.ts`
+- `app/Livewire/Pages/` — Full-page Livewire components (registered via `Route::get('/uri', ComponentClass::class)`)
+- `resources/views/livewire/pages/` — Blade views for Livewire page components
+- `resources/views/layouts/app.blade.php` — Authenticated layout (MaryUI `x-mary-main`, sidebar, navbar)
+- `resources/views/components/guest-layout.blade.php` — Guest layout (MaryUI `x-mary-card`, centered)
+- `resources/views/auth/` — Auth pages (plain Blade + MaryUI, handled by controllers)
+- `resources/js/app.js` — Minimal JS: Pusher Beams push notification registration only
+
+### MaryUI Components
+
+All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`):
+
+| Component | Tag |
+|-----------|-----|
+| Button | `<x-mary-button>` |
+| Input | `<x-mary-input>` |
+| Select | `<x-mary-select>` |
+| Datepicker | `<x-mary-datepicker>` |
+| Table | `<x-mary-table>` |
+| Card | `<x-mary-card>` |
+| Form | `<x-mary-form>` |
+| Alert | `<x-mary-alert>` |
+| Toast | `<x-mary-toast>` |
+| Nav/layout | `<x-mary-nav>`, `<x-mary-main>`, `<x-mary-menu>`, `<x-mary-menu-item>` |
 
 ### Routes (web.php)
 
-| Method | URI | Name |
-|--------|-----|-------|
-| GET | `/babies` | `babies.show` |
-| GET | `/babies/add` | `babies.create` |
-| POST | `/babies` | `babies.store` |
-| GET | `/babies/{baby}/edit` | `babies.edit` |
-| PATCH | `/babies/{baby}/update` | `babies.update` |
-| GET | `/baby_actions` | `baby_actions.show` |
-| GET | `/baby_actions/add` | `baby_actions.create` |
-| POST | `/baby_actions` | `baby_actions.store` |
-| GET | `/baby_actions/{babyAction}/edit` | `baby_actions.edit` |
-| PATCH | `/baby_actions/{babyAction}/update` | `baby_actions.update` |
-| GET | `/pusher/beams-auth` | `pusher.beams.auth` |
+| Method | URI | Name | Component |
+|--------|-----|-------|-----------|
+| GET | `/babies` | `babies.show` | `Pages\Baby\Index` |
+| GET | `/babies/add` | `babies.create` | `Pages\Baby\Create` |
+| GET | `/babies/{baby}/edit` | `babies.edit` | `Pages\Baby\Edit` |
+| GET | `/baby_actions` | `baby_actions.show` | `Pages\BabyAction\Index` |
+| GET | `/baby_actions/add` | `baby_actions.create` | `Pages\BabyAction\Create` |
+| GET | `/baby_actions/{babyAction}/edit` | `baby_actions.edit` | `Pages\BabyAction\Edit` |
+| GET | `/profile` | `profile.edit` | `Pages\Profile\Edit` |
+| GET | `/pusher/beams-auth` | `pusher.beams.auth` | — |
 
-Dashboard redirects to `babies.show`.
+Root `/` redirects to `/babies`.
 
 ## Notification System
 
@@ -90,7 +101,7 @@ Reminders are sent via Pusher Beams push notifications:
 1. The artisan command `app:send-baby-action-reminder` queries `baby_actions` where `finished_at < now() - 2h45m` and `reminders < 1`.
 2. `BabyActionsService::sendReminder()` dispatches a push notification to the baby's parent and increments `reminders`.
 3. The `PushNotifications` contract is implemented by `BeamsNotificationsService`, injected via the service container.
-4. The frontend authenticates with Beams at `/pusher/beams-auth`.
+4. The frontend registers with Beams via `window.registerPushNotifications()` in `resources/js/app.js`.
 
 Schedule this command via Laravel's scheduler or a cron job to run every minute.
 
@@ -107,7 +118,6 @@ Test database is created automatically by Sail's MySQL init script.
 ## Code Style
 
 PHP: Laravel Pint (run `./vendor/bin/sail pint` before committing).
-TypeScript: vue-tsc enforces type checking during build.
 
 ## Documentation Lookup
 

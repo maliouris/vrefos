@@ -1,21 +1,18 @@
 <?php
 
-use App\Http\Controllers\BabyActionController;
-use App\Http\Controllers\BabyController;
-use App\Http\Controllers\ProfileController;
+use App\Livewire\Pages\Baby\Index as BabyIndex;
+use App\Livewire\Pages\Baby\Create as BabyCreate;
+use App\Livewire\Pages\Baby\Edit as BabyEdit;
+use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
+use App\Livewire\Pages\BabyAction\Create as BabyActionCreate;
+use App\Livewire\Pages\BabyAction\Edit as BabyActionEdit;
+use App\Livewire\Pages\Profile\Edit as ProfileEdit;
 use App\Services\BeamsClientService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
-
-Route::get('/dashboard', function () {
-//    return Inertia::render('Dashboard');
-    return redirect()->route('babies.show');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', fn () => redirect('/babies'));
 
 Route::middleware('auth')->group(function () {
     Route::get('/pusher/beams-auth', function (Request $request) {
@@ -30,30 +27,17 @@ Route::middleware('auth')->group(function () {
         return response()->json($beamsToken);
     })->name('pusher.beams.auth');
 
+    Route::get('/babies', BabyIndex::class)->name('babies.show');
+    Route::get('/babies/add', BabyCreate::class)->name('babies.create');
+    Route::get('/babies/{baby}/edit', BabyEdit::class)->name('babies.edit');
 
-    Route::prefix('babies')->group(function () {
-        Route::get('add', [BabyController::class, 'create'])->name('babies.create');
-        Route::patch('{baby}/update', [BabyController::class, 'update'])->name('babies.update');
-        Route::get('{baby}/edit', [BabyController::class, 'edit'])->name('babies.edit');
-        Route::post('', [BabyController::class, 'store'])->name('babies.store');
-        Route::get('', [BabyController::class, 'show'])->name('babies.show');
-    });
+    Route::get('/baby_actions', BabyActionIndex::class)->name('baby_actions.show');
+    Route::get('/baby_actions/add', BabyActionCreate::class)->name('baby_actions.create');
+    Route::get('/baby_actions/{babyAction}/edit', BabyActionEdit::class)->name('baby_actions.edit');
 
-    Route::prefix('baby_actions')->group(function () {
-        Route::get('add', [BabyActionController::class, 'create'])->name('baby_actions.create');
-        Route::patch('{babyAction}/update', [BabyActionController::class, 'update'])->name('baby_actions.update');
-        Route::get('{babyAction}/edit', [BabyActionController::class, 'edit'])->name('baby_actions.edit');
-        Route::post('', [BabyActionController::class, 'store'])->name('baby_actions.store');
-        Route::get('', [BabyActionController::class, 'show'])->name('baby_actions.show');
-    });
-
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::get('/terms-and-conditions', function () {
-        return Inertia::render('Legal/TermsAndConditions');
-    });
+    Route::get('/profile', ProfileEdit::class)->name('profile.edit');
 });
+
+Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));
 
 require __DIR__.'/auth.php';
