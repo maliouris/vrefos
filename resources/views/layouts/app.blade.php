@@ -9,18 +9,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="font-sans antialiased">
-    <x-mary-main full-width>
-        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
-            <x-mary-menu activate-by-route>
-                <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
-                <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
-            </x-mary-menu>
-        </x-slot:sidebar>
+<body class="min-h-screen font-sans antialiased bg-base-200">
 
-        <x-slot:navbar>
-            <x-mary-button icon="o-bars-3" responsive drawer="main-drawer" class="btn-ghost" />
-            <div class="flex-1 font-bold text-lg">{{ config('app.name', 'Vrefos') }}</div>
+    {{-- NAVBAR --}}
+    <x-mary-nav sticky full-width>
+        <x-slot:brand>
+            <label for="main-drawer" class="lg:hidden mr-3">
+                <x-mary-icon name="o-bars-3" class="cursor-pointer" />
+            </label>
+            <span class="font-bold text-lg">{{ config('app.name', 'Vrefos') }}</span>
+        </x-slot:brand>
+        <x-slot:actions>
             @auth
                 <span class="text-sm mr-2">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">
@@ -28,7 +27,17 @@
                     <x-mary-button type="submit" label="Logout" icon="o-arrow-right-on-rectangle" class="btn-ghost btn-sm" />
                 </form>
             @endauth
-        </x-slot:navbar>
+        </x-slot:actions>
+    </x-mary-nav>
+
+    {{-- MAIN --}}
+    <x-mary-main with-nav full-width>
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
+            <x-mary-menu activate-by-route>
+                <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
+                <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
+            </x-mary-menu>
+        </x-slot:sidebar>
 
         <x-slot:content>
             {{ $slot }}
