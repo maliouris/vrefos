@@ -10,22 +10,22 @@
     @livewireStyles
 </head>
 <body class="font-sans antialiased">
-    <x-main full-width>
+    <x-mary-main full-width>
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
-            <x-menu activate-by-route>
-                <x-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
-                <x-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
-            </x-menu>
+            <x-mary-menu activate-by-route>
+                <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
+                <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
+            </x-mary-menu>
         </x-slot:sidebar>
 
         <x-slot:navbar>
-            <x-button icon="o-bars-3" responsive drawer="main-drawer" class="btn-ghost" />
+            <x-mary-button icon="o-bars-3" responsive drawer="main-drawer" class="btn-ghost" />
             <div class="flex-1 font-bold text-lg">{{ config('app.name', 'Vrefos') }}</div>
             @auth
                 <span class="text-sm mr-2">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-button type="submit" label="Logout" icon="o-arrow-right-on-rectangle" class="btn-ghost btn-sm" />
+                    <x-mary-button type="submit" label="Logout" icon="o-arrow-right-on-rectangle" class="btn-ghost btn-sm" />
                 </form>
             @endauth
         </x-slot:navbar>
@@ -33,9 +33,9 @@
         <x-slot:content>
             {{ $slot }}
         </x-slot:content>
-    </x-main>
+    </x-mary-main>
 
-    <x-toast />
+    <x-mary-toast />
     @livewireScripts
 </body>
 </html>

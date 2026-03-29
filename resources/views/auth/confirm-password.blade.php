@@ -6,7 +6,7 @@
     <form method="POST" action="{{ route('password.confirm') }}">
         @csrf
 
-        <x-input
+        <x-mary-input
             label="Password"
             name="password"
             type="password"
@@ -16,7 +16,7 @@
         @error('password') <p class="text-error text-sm mt-1">{{ $message }}</p> @enderror
 
         <div class="mt-4 flex justify-end">
-            <x-button type="submit" label="Confirm" class="btn-primary" />
+            <x-mary-button type="submit" label="Confirm" class="btn-primary" />
         </div>
     </form>
 </x-guest-layout>

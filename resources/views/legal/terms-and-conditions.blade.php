@@ -5,9 +5,9 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <x-card>
+            <x-mary-card>
                 <p>Terms and conditions content goes here.</p>
-            </x-card>
+            </x-mary-card>
         </div>
     </div>
 </x-app-layout>

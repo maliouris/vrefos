@@ -1,5 +1,12 @@
 <?php
 
+use App\Livewire\Pages\Baby\Index as BabyIndex;
+use App\Livewire\Pages\Baby\Create as BabyCreate;
+use App\Livewire\Pages\Baby\Edit as BabyEdit;
+use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
+use App\Livewire\Pages\BabyAction\Create as BabyActionCreate;
+use App\Livewire\Pages\BabyAction\Edit as BabyActionEdit;
+use App\Livewire\Pages\Profile\Edit as ProfileEdit;
 use App\Services\BeamsClientService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -20,15 +27,15 @@ Route::middleware('auth')->group(function () {
         return response()->json($beamsToken);
     })->name('pusher.beams.auth');
 
-    Route::livewire('/babies', 'pages::baby.index')->name('babies.show');
-    Route::livewire('/babies/add', 'pages::baby.create')->name('babies.create');
-    Route::livewire('/babies/{baby}/edit', 'pages::baby.edit')->name('babies.edit');
+    Route::get('/babies', BabyIndex::class)->name('babies.show');
+    Route::get('/babies/add', BabyCreate::class)->name('babies.create');
+    Route::get('/babies/{baby}/edit', BabyEdit::class)->name('babies.edit');
 
-    Route::livewire('/baby_actions', 'pages::baby-action.index')->name('baby_actions.show');
-    Route::livewire('/baby_actions/add', 'pages::baby-action.create')->name('baby_actions.create');
-    Route::livewire('/baby_actions/{babyAction}/edit', 'pages::baby-action.edit')->name('baby_actions.edit');
+    Route::get('/baby_actions', BabyActionIndex::class)->name('baby_actions.show');
+    Route::get('/baby_actions/add', BabyActionCreate::class)->name('baby_actions.create');
+    Route::get('/baby_actions/{babyAction}/edit', BabyActionEdit::class)->name('baby_actions.edit');
 
-    Route::livewire('/profile', 'pages::profile.edit')->name('profile.edit');
+    Route::get('/profile', ProfileEdit::class)->name('profile.edit');
 });
 
 Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));

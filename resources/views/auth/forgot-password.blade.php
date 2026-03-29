@@ -6,7 +6,7 @@
     <form method="POST" action="{{ route('password.email') }}">
         @csrf
 
-        <x-input
+        <x-mary-input
             label="Email"
             name="email"
             type="email"
@@ -17,7 +17,7 @@
         @error('email') <p class="text-error text-sm mt-1">{{ $message }}</p> @enderror
 
         <div class="mt-4 flex justify-end">
-            <x-button type="submit" label="Send Reset Link" class="btn-primary" />
+            <x-mary-button type="submit" label="Send Reset Link" class="btn-primary" />
         </div>
     </form>
 </x-guest-layout>

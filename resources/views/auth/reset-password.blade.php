@@ -3,7 +3,7 @@
         @csrf
         <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-        <x-input
+        <x-mary-input
             label="Email"
             name="email"
             type="email"
@@ -14,7 +14,7 @@
         />
         @error('email') <p class="text-error text-sm mt-1">{{ $message }}</p> @enderror
 
-        <x-input
+        <x-mary-input
             label="Password"
             name="password"
             type="password"
@@ -24,7 +24,7 @@
         />
         @error('password') <p class="text-error text-sm mt-1">{{ $message }}</p> @enderror
 
-        <x-input
+        <x-mary-input
             label="Confirm Password"
             name="password_confirmation"
             type="password"
@@ -34,7 +34,7 @@
         />
 
         <div class="mt-4 flex justify-end">
-            <x-button type="submit" label="Reset Password" class="btn-primary" />
+            <x-mary-button type="submit" label="Reset Password" class="btn-primary" />
         </div>
     </form>
 </x-guest-layout>

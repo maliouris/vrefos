@@ -6,17 +6,17 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "livewire/livewire": "^4.1",
+        "livewire/volt": "^1.7.0",
         "pusher/pusher-push-notifications": "^2.0",
-        "tightenco/ziggy": "^2.0"
+        "robsontenorio/mary": "^2.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
         "fumeapp/modeltyper": "^3.0",
-        "laravel/breeze": "^2.1",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",

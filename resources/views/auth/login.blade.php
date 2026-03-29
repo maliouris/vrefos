@@ -2,7 +2,7 @@
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <x-input
+        <x-mary-input
             label="Email"
             name="email"
             type="email"
@@ -13,7 +13,7 @@
         />
         @error('email') <p class="text-error text-sm mt-1">{{ $message }}</p> @enderror
 
-        <x-input
+        <x-mary-input
             label="Password"
             name="password"
             type="password"
@@ -27,7 +27,7 @@
             @if (Route::has('password.request'))
                 <a href="{{ route('password.request') }}" class="text-sm link">Forgot password?</a>
             @endif
-            <x-button type="submit" label="Log in" class="btn-primary" />
+            <x-mary-button type="submit" label="Log in" class="btn-primary" />
         </div>
     </form>
 </x-guest-layout>
