@@ -38,6 +38,7 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 ### Backend
 
 - `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionType`, `NotificationSetting`
+- `app/Policies/BabyPolicy.php` — Authorizes `update` only when the authenticated user owns the baby (`user_id` match). Auto-discovered by Laravel.
 - `app/Services/BabyActionsService.php` — Sends reminders via push notifications
 - `app/Services/BeamsNotificationsService.php` — Pusher Beams implementation of `PushNotifications` contract
 - `app/Services/BeamsClientService.php` — Pusher Beams SDK client wrapper
