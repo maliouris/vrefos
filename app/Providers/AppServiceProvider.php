@@ -15,9 +15,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(BeamsClientService::class, fn () => new BeamsClientService([
-                "instanceId" => config('pusher.id'),
-                "secretKey" => config('pusher.key'),
-            ]
+            'instanceId' => config('pusher.id'),
+            'secretKey' => config('pusher.key'),
+        ]
         ));
 
         $this->app->singleton(PushNotifications::class, BeamsNotificationsService::class);

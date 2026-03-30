@@ -14,7 +14,7 @@ class BabyAction extends Model
         'baby_action_type_id',
         'baby_id',
         'started_at',
-        'finished_at'
+        'finished_at',
     ];
 
     protected $casts = [

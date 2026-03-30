@@ -1,11 +1,12 @@
 <?php
 
-use App\Livewire\Pages\Baby\Index as BabyIndex;
 use App\Livewire\Pages\Baby\Create as BabyCreate;
 use App\Livewire\Pages\Baby\Edit as BabyEdit;
-use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
+use App\Livewire\Pages\Baby\Index as BabyIndex;
 use App\Livewire\Pages\BabyAction\Create as BabyActionCreate;
 use App\Livewire\Pages\BabyAction\Edit as BabyActionEdit;
+use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
+use App\Livewire\Pages\NotificationSettings\Index;
 use App\Livewire\Pages\Profile\Edit as ProfileEdit;
 use App\Services\BeamsClientService;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ Route::middleware('auth')->group(function () {
         }
 
         $beamsToken = App::get(BeamsClientService::class)->generateToken($userID);
+
         return response()->json($beamsToken);
     })->name('pusher.beams.auth');
 
@@ -37,7 +39,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', ProfileEdit::class)->name('profile.edit');
 
-    Route::get('/notification-settings', \App\Livewire\Pages\NotificationSettings\Index::class)->name('notification-settings.edit');
+    Route::get('/notification-settings', Index::class)->name('notification-settings.edit');
 });
 
 Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));

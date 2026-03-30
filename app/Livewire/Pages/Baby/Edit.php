@@ -10,7 +10,9 @@ use Livewire\Component;
 class Edit extends Component
 {
     public Baby $baby;
+
     public string $name = '';
+
     public string $birth_date = '';
 
     public function mount(Baby $baby): void

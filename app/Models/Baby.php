@@ -21,7 +21,7 @@ class Baby extends Model
         'name',
         'birth_date',
         'user_id',
-        'gender'
+        'gender',
     ];
 
     /**
@@ -30,15 +30,17 @@ class Baby extends Model
      * @return array<string, string>
      */
     protected $casts = [
-            'birth_date' => 'date',
-            'gender' => Gender::class
-        ];
+        'birth_date' => 'date',
+        'gender' => Gender::class,
+    ];
 
-    public function user(): BelongsTo {
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function babyActions(): HasMany {
+    public function babyActions(): HasMany
+    {
         return $this->hasMany(BabyAction::class);
     }
 }

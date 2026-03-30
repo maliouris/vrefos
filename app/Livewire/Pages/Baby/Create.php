@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\Baby;
 
-use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -10,6 +9,7 @@ use Livewire\Component;
 class Create extends Component
 {
     public string $name = '';
+
     public string $birth_date = '';
 
     public function save(): void

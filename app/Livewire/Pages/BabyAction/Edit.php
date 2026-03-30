@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\BabyAction;
 
-use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
 use Livewire\Attributes\Layout;
@@ -12,9 +11,13 @@ use Livewire\Component;
 class Edit extends Component
 {
     public BabyAction $babyAction;
+
     public ?int $baby_id = null;
+
     public ?int $baby_action_type_id = null;
+
     public string $started_at = '';
+
     public string $finished_at = '';
 
     public function mount(BabyAction $babyAction): void

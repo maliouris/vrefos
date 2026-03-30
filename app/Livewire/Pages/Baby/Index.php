@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\Baby;
 
-use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 

@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\Profile;
 
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -13,10 +12,15 @@ use Livewire\Component;
 class Edit extends Component
 {
     public string $name = '';
+
     public string $email = '';
+
     public string $current_password = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
+
     public string $delete_password = '';
 
     public function mount(): void
@@ -31,7 +35,7 @@ class Edit extends Component
 
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
         ]);
 
         $user->fill(['name' => $this->name, 'email' => $this->email]);
