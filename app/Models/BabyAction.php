@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BabyAction extends Model
 {
@@ -30,5 +31,10 @@ class BabyAction extends Model
     public function babyActionType(): BelongsTo
     {
         return $this->belongsTo(BabyActionType::class);
+    }
+
+    public function eatDetail(): HasOne
+    {
+        return $this->hasOne(BabyActionEatDetail::class);
     }
 }

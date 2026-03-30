@@ -37,7 +37,7 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 
 ### Backend
 
-- `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionType`, `NotificationSetting`
+- `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting`
 - `app/Policies/BabyPolicy.php` — Authorizes `update` only when the authenticated user owns the baby (`user_id` match). Auto-discovered by Laravel.
 - `app/Policies/BabyActionPolicy.php` — Authorizes `update` only when the authenticated user owns the action's parent baby. Auto-discovered by Laravel.
 - `app/Services/BabyActionsService.php` — Sends reminders via push notifications
@@ -46,15 +46,20 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 - `app/Contracts/PushNotifications.php` — Interface for push notification backends
 - `app/Console/Commands/SendBabyActionsReminders.php` — Scheduled command: for each unreminded finished action, looks up the user's `NotificationSetting` for that action type; skips if disabled or threshold not reached; increments `reminders` after sending
 - `app/Enums/Gender.php` — `male` / `female`
+- `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
+- `app/Enums/BreastSide.php` — `left` / `right`
 
 ### Data Model
 
 ```
 User → hasMany → Baby → hasMany → BabyAction → belongsTo → BabyActionType
+                                  BabyAction  → hasOne    → BabyActionEatDetail
 User → hasMany → NotificationSetting → belongsTo → BabyActionType
 ```
 
 `BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `reminders` (int, default 0)
+
+`BabyActionEatDetail` fields: `baby_action_id`, `food_type` (nullable, cast to `FoodType` enum), `breast_side` (nullable, cast to `BreastSide` enum). One-to-one with `BabyAction`; cascade-deleted with parent. Only created when action type is "Eat" and a food type is selected.
 
 `NotificationSetting` fields: `user_id`, `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180). Unique on `(user_id, baby_action_type_id)`. Created automatically via `firstOrCreate` on first page visit or first reminder run.
 

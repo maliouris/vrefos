@@ -14,7 +14,7 @@ class Index extends Component
     {
         $hasBabies = Baby::where('user_id', auth()->id())->exists();
 
-        $babyActions = BabyAction::with(['baby', 'babyActionType'])
+        $babyActions = BabyAction::with(['baby', 'babyActionType', 'eatDetail'])
             ->whereHas('baby', fn ($q) => $q->where('user_id', auth()->id()))
             ->orderByDesc('started_at')
             ->get();

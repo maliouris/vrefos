@@ -2,8 +2,12 @@
 
 namespace App\Livewire\Pages\BabyAction;
 
+use App\Enums\BreastSide;
+use App\Enums\FoodType;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -20,6 +24,10 @@ class Edit extends Component
 
     public string $finished_at = '';
 
+    public ?string $food_type = null;
+
+    public ?string $breast_side = null;
+
     public function mount(BabyAction $babyAction): void
     {
         $this->authorize('update', $babyAction);
@@ -28,6 +36,33 @@ class Edit extends Component
         $this->baby_action_type_id = $babyAction->baby_action_type_id;
         $this->started_at = $babyAction->started_at?->format('Y-m-d\TH:i') ?? '';
         $this->finished_at = $babyAction->finished_at?->format('Y-m-d\TH:i') ?? '';
+        $this->food_type = $babyAction->eatDetail?->food_type?->value;
+        $this->breast_side = $babyAction->eatDetail?->breast_side?->value;
+    }
+
+    #[Computed]
+    public function isEatAction(): bool
+    {
+        if (! $this->baby_action_type_id) {
+            return false;
+        }
+
+        return BabyActionType::find($this->baby_action_type_id)?->name === 'Eat';
+    }
+
+    public function updatedBabyActionTypeId(): void
+    {
+        if (! $this->isEatAction) {
+            $this->food_type = null;
+            $this->breast_side = null;
+        }
+    }
+
+    public function updatedFoodType(): void
+    {
+        if ($this->food_type !== FoodType::BreastMilk->value) {
+            $this->breast_side = null;
+        }
     }
 
     public function update(): void
@@ -37,6 +72,8 @@ class Edit extends Component
             'baby_action_type_id' => 'required|exists:baby_action_types,id',
             'started_at' => 'required|date',
             'finished_at' => 'nullable|date|after_or_equal:started_at',
+            'food_type' => ['nullable', Rule::enum(FoodType::class)],
+            'breast_side' => ['nullable', Rule::enum(BreastSide::class)],
         ]);
 
         $this->babyAction->update([
@@ -46,6 +83,18 @@ class Edit extends Component
             'finished_at' => $this->finished_at ?: null,
         ]);
 
+        if ($this->isEatAction && $this->food_type !== null) {
+            $this->babyAction->eatDetail()->updateOrCreate(
+                ['baby_action_id' => $this->babyAction->id],
+                [
+                    'food_type' => $this->food_type,
+                    'breast_side' => $this->breast_side,
+                ]
+            );
+        } else {
+            $this->babyAction->eatDetail()->delete();
+        }
+
         session()->flash('success', 'Baby action updated successfully.');
     }
 
@@ -54,6 +103,14 @@ class Edit extends Component
         $babies = auth()->user()->babies()->get()->map(fn ($b) => ['id' => $b->id, 'name' => $b->name]);
         $actionTypes = BabyActionType::all()->map(fn ($t) => ['id' => $t->id, 'name' => $t->name]);
 
-        return view('livewire.pages.baby-action.edit', compact('babies', 'actionTypes'));
+        $foodTypes = collect(FoodType::cases())
+            ->map(fn ($case) => ['id' => $case->value, 'name' => $case->label()])
+            ->all();
+
+        $breastSides = collect(BreastSide::cases())
+            ->map(fn ($case) => ['id' => $case->value, 'name' => $case->label()])
+            ->all();
+
+        return view('livewire.pages.baby-action.edit', compact('babies', 'actionTypes', 'foodTypes', 'breastSides'));
     }
 }

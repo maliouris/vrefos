@@ -19,14 +19,23 @@
     @else
         @php
             $headers = [
-                ['key' => 'baby.name', 'label' => 'Baby'],
-                ['key' => 'babyActionType.name', 'label' => 'Type'],
-                ['key' => 'started_at', 'label' => 'Started At', 'format' => ['date', 'd/m/Y H:i']],
-                ['key' => 'finished_at', 'label' => 'Finished At', 'format' => ['date', 'd/m/Y H:i']],
+                ['key' => 'baby.name',           'label' => 'Baby'],
+                ['key' => 'babyActionType.name',  'label' => 'Type'],
+                ['key' => 'started_at',           'label' => 'Started At',  'format' => ['date', 'd/m/Y H:i']],
+                ['key' => 'finished_at',          'label' => 'Finished At', 'format' => ['date', 'd/m/Y H:i']],
+                ['key' => 'eatDetail.food_type',  'label' => 'Food Type'],
             ];
         @endphp
 
         <x-mary-table :headers="$headers" :rows="$babyActions">
+            @scope('cell_eatDetail.food_type', $action)
+                @if ($action->eatDetail?->food_type)
+                    {{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}
+                @else
+                    —
+                @endif
+            @endscope
+
             @scope('actions', $action)
                 <x-mary-button label="Edit" icon="o-pencil" link="{{ route('baby_actions.edit', $action) }}" class="btn-ghost btn-sm" />
             @endscope
