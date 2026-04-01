@@ -26,11 +26,6 @@ class Create extends Component
 
     public ?string $breast_side = null;
 
-    public function mount(): void
-    {
-        $this->started_at = now()->format('Y-m-d\TH:i');
-    }
-
     #[Computed]
     public function isEatAction(): bool
     {

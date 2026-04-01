@@ -34,3 +34,11 @@
         </x-mary-form>
     </x-mary-card>
 </div>
+
+@script
+<script>
+    const now = new Date();
+    now.setSeconds(0, 0);
+    $wire.set('started_at', new Date(now - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+</script>
+@endscript
