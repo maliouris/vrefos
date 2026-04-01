@@ -29,7 +29,6 @@ class Create extends Component
     public function mount(): void
     {
         $this->started_at = now()->format('Y-m-d\TH:i');
-        $this->finished_at = now()->format('Y-m-d\TH:i');
     }
 
     #[Computed]
