@@ -18,6 +18,16 @@
                                 label="Enable notifications"
                                 wire:model="settings.{{ $actionTypeId }}.enabled"
                             />
+                            <x-mary-select
+                                label="Notify from"
+                                wire:model="settings.{{ $actionTypeId }}.notify_from"
+                                :options="[
+                                    ['id' => 'started_at', 'name' => 'Start time'],
+                                    ['id' => 'finished_at', 'name' => 'End time'],
+                                ]"
+                                option-value="id"
+                                option-label="name"
+                            />
                             <x-mary-input
                                 label="Notify after (minutes)"
                                 wire:model="settings.{{ $actionTypeId }}.notify_after_minutes"

@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\NotifyFrom;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NotificationSetting extends Model
 {
-    protected $fillable = ['user_id', 'baby_action_type_id', 'enabled', 'notify_after_minutes'];
+    protected $fillable = ['user_id', 'baby_action_type_id', 'enabled', 'notify_after_minutes', 'notify_from'];
 
-    protected $casts = ['enabled' => 'boolean'];
+    protected $casts = [
+        'enabled' => 'boolean',
+        'notify_from' => NotifyFrom::class,
+    ];
 
     public function user(): BelongsTo
     {

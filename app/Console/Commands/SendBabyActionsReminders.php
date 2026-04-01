@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\NotifyFrom;
 use App\Models\BabyAction;
 use App\Models\NotificationSetting;
 use App\Services\BabyActionsService;
@@ -28,8 +29,7 @@ class SendBabyActionsReminders extends Command
      */
     public function handle(BabyActionsService $babyActionsService): void
     {
-        $babyActions = BabyAction::whereNotNull('finished_at')
-            ->where('reminders', '<', 1)
+        $babyActions = BabyAction::where('reminders', '<', 1)
             ->with('baby.user', 'babyActionType')
             ->get();
 
@@ -38,14 +38,22 @@ class SendBabyActionsReminders extends Command
 
             $setting = NotificationSetting::firstOrCreate(
                 ['user_id' => $user->id, 'baby_action_type_id' => $babyAction->baby_action_type_id],
-                ['enabled' => true, 'notify_after_minutes' => 180]
+                ['enabled' => true, 'notify_after_minutes' => 180, 'notify_from' => NotifyFrom::StartedAt]
             );
 
             if (! $setting->enabled) {
                 continue;
             }
 
-            if ($babyAction->finished_at->diffInMinutes(now()) < $setting->notify_after_minutes) {
+            $referenceTime = $setting->notify_from === NotifyFrom::FinishedAt
+                ? $babyAction->finished_at
+                : $babyAction->started_at;
+
+            if (is_null($referenceTime)) {
+                continue;
+            }
+
+            if ($referenceTime->diffInMinutes(now()) < $setting->notify_after_minutes) {
                 continue;
             }
 
