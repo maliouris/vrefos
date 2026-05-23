@@ -6,32 +6,34 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 
 ## Tech Stack
 
-- **Backend:** PHP 8.2+, Laravel 13, Laravel Sanctum, Laravel Sail (Docker)
+- **Backend:** PHP 8.5 (mise), Laravel 13, Laravel Sanctum, NativePHP Desktop v2
 - **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
-- **Database:** MySQL 8.0 (via Sail)
+- **Database:** MySQL 8.0 (Docker via Sail — MySQL only)
 - **Push Notifications:** Pusher Beams (`pusher/pusher-push-notifications`, `@pusher/push-notifications-web`)
 - **Dev tools:** Vite + `@tailwindcss/vite`, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
+- **Runtime:** mise manages PHP 8.5 and Node 24 locally; Sail manages only the MySQL Docker container
 
 ## Running the Project
 
 ```bash
-./vendor/bin/sail up -d          # Start Docker containers
-./vendor/bin/sail artisan migrate
-./vendor/bin/sail npm run dev    # Vite dev server
-./vendor/bin/sail npm run build  # Production build
+./vendor/bin/sail up -d   # Start MySQL Docker container
+php artisan migrate
+npm run dev               # Vite dev server
+npm run build             # Production build
+php artisan native:run    # Run desktop app in development mode
 ```
+
+> **IMPORTANT:** Sail manages only the MySQL container. PHP, Composer, and Node run directly via mise. Never use `sail artisan`, `sail composer`, or `sail npm`.
 
 ## Key Commands
 
 ```bash
-./vendor/bin/sail artisan app:send-baby-action-reminder   # Send pending reminders
-./vendor/bin/sail artisan tinker
-./vendor/bin/sail composer ...                             # Run any composer command
-./vendor/bin/sail npm ...                                  # Run any npm command
-./vendor/bin/sail pint                                     # Format PHP code
+php artisan app:send-baby-action-reminder   # Send pending reminders
+php artisan tinker
+composer ...                                # Run any composer command
+npm ...                                     # Run any npm command
+./vendor/bin/pint                           # Format PHP code
 ```
-
-> **IMPORTANT:** Always use `./vendor/bin/sail composer` and `./vendor/bin/sail npm` instead of running `composer` or `npm` directly. Never invoke `composer` or `npm` without the sail prefix.
 
 ## Architecture
 
@@ -128,14 +130,14 @@ Users configure their notification preferences at `/notification-settings` (one 
 PHPUnit 12 — run with:
 
 ```bash
-./vendor/bin/sail artisan test
+php artisan test
 ```
 
 Test database is created automatically by Sail's MySQL init script.
 
 ## Code Style
 
-PHP: Laravel Pint (run `./vendor/bin/sail pint` before committing).
+PHP: Laravel Pint (run `./vendor/bin/pint` before committing).
 
 ## Documentation Lookup
 
