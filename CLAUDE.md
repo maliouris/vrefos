@@ -6,7 +6,7 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 
 ## Tech Stack
 
-- **Backend:** PHP 8.5 (mise), Laravel 13, Laravel Sanctum, NativePHP Desktop v2
+- **Backend:** PHP 8.5 (mise), Laravel 13, Laravel Sanctum, NativePHP Mobile v3
 - **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
 - **Database:** MySQL 8.0 (Docker via Sail — MySQL only)
 - **Push Notifications:** Pusher Beams (`pusher/pusher-push-notifications`, `@pusher/push-notifications-web`)
@@ -19,8 +19,8 @@ Vrefos is a Laravel 13 web application for parents to track toddler/baby activit
 ./vendor/bin/sail up -d   # Start MySQL Docker container
 php artisan migrate
 npm run dev               # Vite dev server
-npm run build             # Production build
-php artisan native:run    # Run desktop app in development mode
+npm run build -- --mode=android   # Build for Android
+php artisan native:run android    # Run on Android device/emulator
 ```
 
 > **IMPORTANT:** Sail manages only the MySQL container. PHP, Composer, and Node run directly via mise. Never use `sail artisan`, `sail composer`, or `sail npm`.
