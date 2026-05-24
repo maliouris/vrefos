@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Gender;
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Baby extends Model
 {
-    use HasFactory;
+    use HasFactory, Syncable;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +19,7 @@ class Baby extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'uuid',
         'name',
         'birth_date',
         'user_id',

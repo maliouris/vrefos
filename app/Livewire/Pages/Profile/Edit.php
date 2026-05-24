@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Pages\Profile;
 
+use App\Services\SyncService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -23,10 +25,26 @@ class Edit extends Component
 
     public string $delete_password = '';
 
+    // Server connection fields (mobile only)
+    public string $server_email = '';
+
+    public string $server_password = '';
+
+    public bool $isRunningInNative = false;
+
+    public bool $isConnectedToServer = false;
+
     public function mount(): void
     {
         $this->name = auth()->user()->name;
         $this->email = auth()->user()->email;
+
+        $this->isRunningInNative = function_exists('nativephp_call');
+
+        if ($this->isRunningInNative) {
+            $this->isConnectedToServer = app(SyncService::class)->hasToken();
+            $this->server_email = auth()->user()->email;
+        }
     }
 
     public function updateProfile(): void
@@ -81,6 +99,49 @@ class Edit extends Component
         session()->regenerateToken();
 
         $this->redirect('/', navigate: true);
+    }
+
+    public function connectToServer(SyncService $syncService): void
+    {
+        $this->validate([
+            'server_email' => ['required', 'email'],
+            'server_password' => ['required', 'string'],
+        ]);
+
+        $serverUrl = rtrim(config('services.sync_server.url', ''), '/');
+
+        if (empty($serverUrl)) {
+            session()->flash('server_error', 'Server URL is not configured.');
+
+            return;
+        }
+
+        $response = Http::timeout(15)
+            ->post("{$serverUrl}/api/v1/auth/token", [
+                'email' => $this->server_email,
+                'password' => $this->server_password,
+            ]);
+
+        if (! $response->successful()) {
+            session()->flash('server_error', 'Invalid credentials or server unreachable.');
+
+            return;
+        }
+
+        $syncService->storeToken($response->json('token'));
+
+        $this->isConnectedToServer = true;
+        $this->reset('server_password');
+
+        session()->flash('server_success', 'Connected to server successfully.');
+    }
+
+    public function disconnectFromServer(SyncService $syncService): void
+    {
+        $syncService->clearToken();
+        $this->isConnectedToServer = false;
+
+        session()->flash('server_success', 'Disconnected from server.');
     }
 
     public function render()

@@ -30,6 +30,35 @@
         </x-mary-form>
     </x-mary-card>
 
+    {{-- Server Sync (mobile only) --}}
+    @if ($isRunningInNative)
+        <x-mary-card title="Server Sync" class="mb-6">
+            @if (session('server_success'))
+                <x-mary-alert title="{{ session('server_success') }}" class="alert-success mb-4" />
+            @endif
+            @if (session('server_error'))
+                <x-mary-alert title="{{ session('server_error') }}" class="alert-error mb-4" />
+            @endif
+
+            @if ($isConnectedToServer)
+                <p class="text-base-content/70 text-sm mb-4">
+                    <span class="badge badge-success badge-sm mr-1">Connected</span>
+                    Your data is syncing to the server.
+                </p>
+                <x-mary-button wire:click="disconnectFromServer" label="Disconnect" class="btn-outline btn-error btn-sm" />
+            @else
+                <p class="text-base-content/70 text-sm mb-4">Connect to your server account to back up your data.</p>
+                <x-mary-form wire:submit="connectToServer">
+                    <x-mary-input label="Server Email" wire:model="server_email" type="email" required />
+                    <x-mary-input label="Server Password" wire:model="server_password" type="password" required />
+                    <x-slot:actions>
+                        <x-mary-button type="submit" label="Connect" class="btn-primary" />
+                    </x-slot:actions>
+                </x-mary-form>
+            @endif
+        </x-mary-card>
+    @endif
+
     {{-- Delete Account --}}
     <x-mary-card title="Delete Account" class="border-error">
         <p class="text-base-content/70 text-sm mb-4">Once your account is deleted, all of its resources and data will be permanently deleted.</p>

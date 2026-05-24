@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'sync_server' => [
+        'url' => env('SYNC_SERVER_URL', ''),
+    ],
+
 ];

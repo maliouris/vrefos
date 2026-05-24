@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\NotifyFrom;
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NotificationSetting extends Model
 {
-    protected $fillable = ['user_id', 'baby_action_type_id', 'enabled', 'notify_after_minutes', 'notify_from'];
+    use Syncable;
+
+    protected $fillable = ['uuid', 'user_id', 'baby_action_type_id', 'enabled', 'notify_after_minutes', 'notify_from'];
 
     protected $casts = [
         'enabled' => 'boolean',

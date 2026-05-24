@@ -46,6 +46,17 @@
     </x-mary-main>
 
     <x-mary-toast />
+
+    {{-- Sync trigger: dispatches Livewire event on network reconnect (mobile only) --}}
+    @auth
+        <livewire:sync-manager />
+        <script>
+            window.addEventListener('online', () => {
+                Livewire.dispatch('triggerSync');
+            });
+        </script>
+    @endauth
+
     @livewireScripts
 </body>
 </html>

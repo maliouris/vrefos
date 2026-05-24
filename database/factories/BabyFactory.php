@@ -18,8 +18,9 @@ class BabyFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'name' => fake()->firstName(),
             'birth_date' => fake()->date(),
+            'gender' => fake()->randomElement(['male', 'female']),
         ];
     }
 }

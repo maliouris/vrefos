@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,13 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BabyAction extends Model
 {
-    use HasFactory;
+    use HasFactory, Syncable;
 
     protected $fillable = [
+        'uuid',
         'baby_action_type_id',
         'baby_id',
         'started_at',
         'finished_at',
+        'reminders',
     ];
 
     protected $casts = [

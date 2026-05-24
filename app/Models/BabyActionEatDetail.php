@@ -4,15 +4,17 @@ namespace App\Models;
 
 use App\Enums\BreastSide;
 use App\Enums\FoodType;
+use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BabyActionEatDetail extends Model
 {
-    use HasFactory;
+    use HasFactory, Syncable;
 
     protected $fillable = [
+        'uuid',
         'baby_action_id',
         'food_type',
         'breast_side',
