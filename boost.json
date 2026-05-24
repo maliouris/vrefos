@@ -6,11 +6,15 @@
     "guidelines": true,
     "mcp": true,
     "nightwatch_mcp": false,
+    "packages": [
+        "nativephp/mobile"
+    ],
     "sail": true,
     "skills": [
         "laravel-best-practices",
         "livewire-development",
         "volt-development",
-        "tailwindcss-development"
+        "tailwindcss-development",
+        "nativephp-mobile"
     ]
 }
