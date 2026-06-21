@@ -1,11 +1,12 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "vendor/bin/sail",
+            "command": "php",
             "args": [
                 "artisan",
                 "boost:mcp"
-            ]
+            ],
+            "cwd": "/home/imaliouris/projects/brefos/main"
         }
     }
 }
