@@ -9,7 +9,7 @@
     "packages": [
         "nativephp/mobile"
     ],
-    "sail": true,
+    "sail": false,
     "skills": [
         "laravel-best-practices",
         "livewire-development",

@@ -8,22 +8,19 @@ Brefos is a Laravel 13 + NativePHP Mobile app for parents to track toddler/baby 
 
 - **Backend:** PHP 8.5 (mise), Laravel 13, NativePHP Mobile v3
 - **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
-- **Database:** SQLite on-device (NativePHP), MySQL 8.0 (Docker via Sail — local dev only)
+- **Database:** SQLite (on-device via NativePHP; also used locally and in tests)
 - **Local Notifications:** `ikromjon/nativephp-mobile-local-notifications` v1.9
 - **Dev tools:** Vite + `@tailwindcss/vite`, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
-- **Runtime:** mise manages PHP 8.5 and Node 24 locally; Sail manages only the MySQL Docker container
+- **Runtime:** mise manages PHP 8.5 and Node 24 locally
 
 ## Running the Project
 
 ```bash
-./vendor/bin/sail up -d   # Start MySQL Docker container
 php artisan migrate
 npm run dev               # Vite dev server
 npm run build -- --mode=android   # Build for Android
 php artisan native:run android    # Run on Android device/emulator
 ```
-
-> **IMPORTANT:** Sail manages only the MySQL container. PHP, Composer, and Node run directly via mise. Never use `sail artisan`, `sail composer`, or `sail npm`.
 
 ## Key Commands
 
