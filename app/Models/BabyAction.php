@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class BabyAction extends Model
 {
-    use HasFactory, Syncable;
+    use HasFactory;
 
     protected $fillable = [
         'uuid',
