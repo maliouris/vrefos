@@ -6,6 +6,7 @@ use App\Enums\NotifyFrom;
 use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -38,24 +39,28 @@ class Index extends Component
         foreach ($this->settings as $actionTypeId => $data) {
             $this->validate([
                 "settings.{$actionTypeId}.notify_after_minutes" => 'required|integer|min:1|max:10080',
-                "settings.{$actionTypeId}.notify_from" => 'required|in:started_at,finished_at',
+                "settings.{$actionTypeId}.notify_from" => ['required', Rule::enum(NotifyFrom::class)],
             ]);
 
+            $enabled = (bool) $data['enabled'];
+            $notifyAfterMinutes = (int) $data['notify_after_minutes'];
+            $notifyFrom = $data['notify_from'];
+
             $setting = NotificationSetting::firstWhere('baby_action_type_id', $actionTypeId);
-            $wasChanged = $setting->enabled !== $data['enabled']
-                || $setting->notify_after_minutes !== $data['notify_after_minutes']
-                || $setting->notify_from->value !== $data['notify_from'];
+            $wasChanged = $setting->enabled !== $enabled
+                || $setting->notify_after_minutes !== $notifyAfterMinutes
+                || $setting->notify_from->value !== $notifyFrom;
 
             NotificationSetting::where('baby_action_type_id', $actionTypeId)
                 ->update([
-                    'enabled' => $data['enabled'],
-                    'notify_after_minutes' => $data['notify_after_minutes'],
-                    'notify_from' => $data['notify_from'],
+                    'enabled' => $enabled,
+                    'notify_after_minutes' => $notifyAfterMinutes,
+                    'notify_from' => $notifyFrom,
                 ]);
 
             if ($wasChanged) {
                 $actionType = BabyActionType::find($actionTypeId);
-                if ($data['enabled']) {
+                if ($enabled) {
                     $count = $scheduler->rescheduleAllForType($actionType);
                     if ($count > 0) {
                         $this->dispatch('notify', message: "Updated {$count} pending reminder(s).");

@@ -12,7 +12,6 @@ class BabyAction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'uuid',
         'baby_action_type_id',
         'baby_id',
         'started_at',

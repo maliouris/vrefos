@@ -201,12 +201,18 @@ class LocalNotificationSchedulerTest extends TestCase
                 'started_at' => now()->subHours(1),
             ]);
 
+        $this->assertNotNull($action->notification_scheduled_at);
         $originalScheduledAt = $action->notification_scheduled_at;
 
+        $this->travel(1)->minutes();
         $action->update(['started_at' => now()->subMinutes(30)]);
 
         $action->refresh();
         $this->assertNotNull($action->notification_scheduled_at);
+        $this->assertTrue(
+            $action->notification_scheduled_at->greaterThan($originalScheduledAt),
+            'Rescheduling should refresh notification_scheduled_at to a later timestamp.'
+        );
     }
 
     public function test_baby_action_observer_updated_with_unrelated_field_does_not_reschedule(): void
@@ -231,21 +237,34 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertEquals($originalScheduledAt, $action->notification_scheduled_at);
     }
 
-    public function test_reschedule_all_for_type_works(): void
+    public function test_reschedule_all_for_type_reschedules_future_and_drops_past(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
 
-        BabyAction::factory()
+        // Default setting fires 180 minutes after started_at.
+        // Future: started 1h ago → fires in ~2h → stays scheduled.
+        $future = BabyAction::factory()
             ->for($baby)
             ->create([
                 'baby_action_type_id' => $actionType->id,
-                'started_at' => now()->subHours(2),
+                'started_at' => now()->subHour(),
+                'notification_scheduled_at' => now(),
+            ]);
+
+        // Past: started 4h ago → fires 1h ago → cannot be rescheduled.
+        $past = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(4),
                 'notification_scheduled_at' => now(),
             ]);
 
         $count = $this->scheduler->rescheduleAllForType($actionType);
 
-        $this->assertGreaterThanOrEqual(0, $count);
+        $this->assertEquals(1, $count);
+        $this->assertNotNull($future->refresh()->notification_scheduled_at);
+        $this->assertNull($past->refresh()->notification_scheduled_at);
     }
 }

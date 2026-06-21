@@ -4,6 +4,8 @@
 
 Brefos is a Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.). It delivers on-device local notifications reminding parents when it's time for the next feeding or sleep session.
 
+It is a **single-user, on-device app** — there is no authentication, no `User` model, and no remote server. All data lives in on-device SQLite.
+
 ## Tech Stack
 
 - **Backend:** PHP 8.5 (mise), Laravel 13, NativePHP Mobile v3
@@ -35,13 +37,10 @@ npm ...                                     # Run any npm command
 
 ### Backend
 
-- `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting`
-- `app/Policies/BabyPolicy.php` — Authorizes `update` only when the authenticated user owns the baby (`user_id` match). Auto-discovered by Laravel.
-- `app/Policies/BabyActionPolicy.php` — Authorizes `update` only when the authenticated user owns the action's parent baby. Auto-discovered by Laravel.
+- `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting` (no `User` model — the app is single-user)
 - `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls are guarded with `function_exists('nativephp_call')` for web/test compatibility.
 - `app/Observers/BabyActionObserver.php` — Triggers the scheduler on `created`, `updated` (time/type fields), and `deleted` events.
 - `app/Providers/NativeServiceProvider.php` — Requests notification permission on boot; resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot.
-- `app/Enums/Gender.php` — `male` / `female`
 - `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
 - `app/Enums/BreastSide.php` — `left` / `right`
 - `app/Enums/NotifyFrom.php` — `StartedAt` / `FinishedAt`
@@ -49,9 +48,9 @@ npm ...                                     # Run any npm command
 ### Data Model
 
 ```
-User → hasMany → Baby → hasMany → BabyAction → belongsTo → BabyActionType
-                                  BabyAction  → hasOne    → BabyActionEatDetail
-User → hasMany → NotificationSetting → belongsTo → BabyActionType
+Baby → hasMany → BabyAction → belongsTo → BabyActionType
+                 BabyAction → hasOne    → BabyActionEatDetail
+NotificationSetting → belongsTo → BabyActionType
 ```
 
 `BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at` (nullable datetime — set when an OS notification is scheduled, null otherwise)
@@ -64,9 +63,7 @@ User → hasMany → NotificationSetting → belongsTo → BabyActionType
 
 - `app/Livewire/Pages/` — Full-page Livewire components (registered via `Route::get('/uri', ComponentClass::class)`)
 - `resources/views/livewire/pages/` — Blade views for Livewire page components
-- `resources/views/layouts/app.blade.php` — Authenticated layout (MaryUI `x-mary-main`, sidebar, navbar)
-- `resources/views/components/guest-layout.blade.php` — Guest layout (MaryUI `x-mary-card`, centered)
-- `resources/views/auth/` — Auth pages (plain Blade + MaryUI, handled by controllers)
+- `resources/views/layouts/app.blade.php` — Main app layout (MaryUI `x-mary-main`, sidebar, navbar)
 - `resources/js/app.js` — Minimal JS entry point (no notification logic — notifications are handled natively)
 
 ### MaryUI Components
@@ -97,8 +94,8 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | GET | `/baby_actions` | `baby_actions.show` | `Pages\BabyAction\Index` |
 | GET | `/baby_actions/add` | `baby_actions.create` | `Pages\BabyAction\Create` |
 | GET | `/baby_actions/{babyAction}/edit` | `baby_actions.edit` | `Pages\BabyAction\Edit` |
-| GET | `/profile` | `profile.edit` | `Pages\Profile\Edit` |
 | GET | `/notification-settings` | `notification-settings.edit` | `Pages\NotificationSettings\Index` |
+| GET | `/terms-and-conditions` | — | View `legal.terms-and-conditions` |
 
 Root `/` redirects to `/babies`.
 
@@ -126,10 +123,10 @@ Users configure preferences at `/notification-settings` (one setting per action 
 PHPUnit 12 — run with:
 
 ```bash
-php artisan test
+php artisan test --compact
 ```
 
-Test database is created automatically by Sail's MySQL init script.
+Tests run against SQLite (the same engine as production). Feature tests use the `RefreshDatabase` trait, so no external database service is required. Livewire page components are tested with `Livewire::test(Component::class)`.
 
 ## Code Style
 
@@ -138,6 +135,15 @@ PHP: Laravel Pint (run `./vendor/bin/pint` before committing).
 ## Documentation Lookup
 
 When looking up docs for any library, framework, SDK, API, or CLI tool, always use **Context7 MCP** first (`resolve-library-id` → `query-docs`). Do not fall back to web search without explicitly asking the user for permission first.
+
+## ⚠️ Note on the auto-generated Laravel Boost block below
+
+The `<laravel-boost-guidelines>` block is generated by `php artisan boost:install` and is **partially stale**. Until it is regenerated, ignore these parts:
+
+- **Laravel Sail** — this project no longer uses Sail. Run commands directly (`php artisan ...`, `composer ...`, `npm ...`), **not** `vendor/bin/sail ...`.
+- **Laravel Sanctum** — removed along with auth; the app is single-user with no API tokens.
+
+Regenerate the block with `php artisan boost:install` after dependency changes to bring it back in sync.
 
 ===
 

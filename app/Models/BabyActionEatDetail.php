@@ -13,7 +13,6 @@ class BabyActionEatDetail extends Model
     use HasFactory;
 
     protected $fillable = [
-        'uuid',
         'baby_action_id',
         'food_type',
         'breast_side',

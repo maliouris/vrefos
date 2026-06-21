@@ -19,15 +19,6 @@
             </label>
             <span class="font-bold text-lg">{{ config('app.name', 'Vrefos') }}</span>
         </x-slot:brand>
-        <x-slot:actions>
-            @auth
-                <span class="text-sm mr-2">{{ auth()->user()->name }}</span>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-mary-button type="submit" label="Logout" icon="o-arrow-right-on-rectangle" class="btn-ghost btn-sm" />
-                </form>
-            @endauth
-        </x-slot:actions>
     </x-mary-nav>
 
     {{-- MAIN --}}
