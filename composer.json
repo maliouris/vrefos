@@ -9,12 +9,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ikromjon/nativephp-mobile-local-notifications": "^1.9",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.1",
         "livewire/volt": "^1.7.0",
         "nativephp/mobile": "^3.3",
-        "pusher/pusher-push-notifications": "^2.0",
         "robsontenorio/mary": "^2.8"
     },
     "require-dev": {

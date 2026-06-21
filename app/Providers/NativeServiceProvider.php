@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\BabyAction;
+use App\Services\LocalNotificationScheduler;
+use Ikromjon\LocalNotifications\Facades\LocalNotifications;
+use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 
 class NativeServiceProvider extends ServiceProvider
@@ -19,7 +24,21 @@ class NativeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (! function_exists('nativephp_call') || ! class_exists('Ikromjon\LocalNotifications\Facades\LocalNotifications')) {
+            return;
+        }
+
+        LocalNotifications::requestPermission();
+
+        if (! Cache::has('notifications_resynced_at')) {
+            $scheduler = $this->app->make(LocalNotificationScheduler::class);
+
+            BabyAction::whereNotNull('notification_scheduled_at')
+                ->with(['baby', 'babyActionType'])
+                ->each(fn (BabyAction $action) => $scheduler->rescheduleFor($action));
+
+            Cache::put('notifications_resynced_at', now(), 300);
+        }
     }
 
     /**
@@ -34,7 +53,7 @@ class NativeServiceProvider extends ServiceProvider
     public function plugins(): array
     {
         return [
-            // \Vendor\ExamplePlugin\ExamplePluginServiceProvider::class,
+            LocalNotificationsServiceProvider::class,
         ];
     }
 }

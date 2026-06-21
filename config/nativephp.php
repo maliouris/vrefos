@@ -189,6 +189,7 @@ return [
         | target_sdk:  The SDK version your app is designed and tested for
         |
         */
+        'min_sdk' => env('NATIVEPHP_ANDROID_MIN_SDK', 26),
 
         /*
         |--------------------------------------------------------------------------

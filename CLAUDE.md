@@ -1,15 +1,15 @@
-# Vrefos — CLAUDE.md
+# Brefos — CLAUDE.md
 
 ## Project Overview
 
-Vrefos is a Laravel 13 web application for parents to track toddler/baby activities (feeding, sleeping, etc.). It sends push notifications reminding parents when it's time for the next feeding or sleep session.
+Brefos is a Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.). It delivers on-device local notifications reminding parents when it's time for the next feeding or sleep session.
 
 ## Tech Stack
 
-- **Backend:** PHP 8.5 (mise), Laravel 13, Laravel Sanctum, NativePHP Mobile v3
+- **Backend:** PHP 8.5 (mise), Laravel 13, NativePHP Mobile v3
 - **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
-- **Database:** MySQL 8.0 (Docker via Sail — MySQL only)
-- **Push Notifications:** Pusher Beams (`pusher/pusher-push-notifications`, `@pusher/push-notifications-web`)
+- **Database:** SQLite on-device (NativePHP), MySQL 8.0 (Docker via Sail — local dev only)
+- **Local Notifications:** `ikromjon/nativephp-mobile-local-notifications` v1.9
 - **Dev tools:** Vite + `@tailwindcss/vite`, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
 - **Runtime:** mise manages PHP 8.5 and Node 24 locally; Sail manages only the MySQL Docker container
 
@@ -28,7 +28,6 @@ php artisan native:run android    # Run on Android device/emulator
 ## Key Commands
 
 ```bash
-php artisan app:send-baby-action-reminder   # Send pending reminders
 php artisan tinker
 composer ...                                # Run any composer command
 npm ...                                     # Run any npm command
@@ -39,18 +38,16 @@ npm ...                                     # Run any npm command
 
 ### Backend
 
-- `app/Models/` — `User`, `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting`
+- `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting`
 - `app/Policies/BabyPolicy.php` — Authorizes `update` only when the authenticated user owns the baby (`user_id` match). Auto-discovered by Laravel.
 - `app/Policies/BabyActionPolicy.php` — Authorizes `update` only when the authenticated user owns the action's parent baby. Auto-discovered by Laravel.
-- `app/Services/BabyActionsService.php` — Sends reminders via push notifications
-- `app/Services/BeamsNotificationsService.php` — Pusher Beams implementation of `PushNotifications` contract
-- `app/Services/BeamsClientService.php` — Pusher Beams SDK client wrapper
-- `app/Contracts/PushNotifications.php` — Interface for push notification backends
-- `app/Console/Commands/SendBabyActionsReminders.php` — Scheduled command: for each unreminded action, looks up the user's `NotificationSetting` for that action type; skips if disabled, reference time is null, or threshold not reached; increments `reminders` after sending
+- `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls are guarded with `function_exists('nativephp_call')` for web/test compatibility.
+- `app/Observers/BabyActionObserver.php` — Triggers the scheduler on `created`, `updated` (time/type fields), and `deleted` events.
+- `app/Providers/NativeServiceProvider.php` — Requests notification permission on boot; resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot.
 - `app/Enums/Gender.php` — `male` / `female`
 - `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
 - `app/Enums/BreastSide.php` — `left` / `right`
-- `app/Enums/NotifyFrom.php` — `started_at` / `finished_at`
+- `app/Enums/NotifyFrom.php` — `StartedAt` / `FinishedAt`
 
 ### Data Model
 
@@ -60,11 +57,11 @@ User → hasMany → Baby → hasMany → BabyAction → belongsTo → BabyActio
 User → hasMany → NotificationSetting → belongsTo → BabyActionType
 ```
 
-`BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `reminders` (int, default 0)
+`BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at` (nullable datetime — set when an OS notification is scheduled, null otherwise)
 
 `BabyActionEatDetail` fields: `baby_action_id`, `food_type` (nullable, cast to `FoodType` enum), `breast_side` (nullable, cast to `BreastSide` enum). One-to-one with `BabyAction`; cascade-deleted with parent. Only created when action type is "Eat" and a food type is selected.
 
-`NotificationSetting` fields: `user_id`, `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `started_at`). Unique on `(user_id, baby_action_type_id)`. Created automatically via `firstOrCreate` on first page visit or first reminder run.
+`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`). Unique on `baby_action_type_id`. Created automatically via `firstOrCreate` when a `BabyAction` is saved.
 
 ### Frontend
 
@@ -73,7 +70,7 @@ User → hasMany → NotificationSetting → belongsTo → BabyActionType
 - `resources/views/layouts/app.blade.php` — Authenticated layout (MaryUI `x-mary-main`, sidebar, navbar)
 - `resources/views/components/guest-layout.blade.php` — Guest layout (MaryUI `x-mary-card`, centered)
 - `resources/views/auth/` — Auth pages (plain Blade + MaryUI, handled by controllers)
-- `resources/js/app.js` — Minimal JS: Pusher Beams push notification registration only
+- `resources/js/app.js` — Minimal JS entry point (no notification logic — notifications are handled natively)
 
 ### MaryUI Components
 
@@ -105,25 +102,27 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | GET | `/baby_actions/{babyAction}/edit` | `baby_actions.edit` | `Pages\BabyAction\Edit` |
 | GET | `/profile` | `profile.edit` | `Pages\Profile\Edit` |
 | GET | `/notification-settings` | `notification-settings.edit` | `Pages\NotificationSettings\Index` |
-| GET | `/pusher/beams-auth` | `pusher.beams.auth` | — |
 
 Root `/` redirects to `/babies`.
 
 ## Notification System
 
-Reminders are sent via Pusher Beams push notifications:
+Reminders are delivered as **on-device local notifications** via `ikromjon/nativephp-mobile-local-notifications`. No server, no internet required.
 
-1. The artisan command `app:send-baby-action-reminder` runs every minute (scheduled in `routes/console.php`).
-2. It fetches all `baby_actions` with `reminders < 1`, eager-loading `baby.user` and `babyActionType`.
-3. For each action it calls `NotificationSetting::firstOrCreate()` with the action's user + action type — defaults to `enabled=true`, `notify_after_minutes=180` (3 hours), `notify_from=started_at`.
-4. Skips if `enabled = false`.
-5. Determines the reference time: `started_at` or `finished_at` based on `notify_from`. Skips if the reference time is null.
-6. Skips if elapsed minutes since the reference time < `notify_after_minutes`.
-7. `BabyActionsService::sendReminder()` dispatches the push notification and increments `reminders`.
-8. The `PushNotifications` contract is implemented by `BeamsNotificationsService`, injected via the service container.
-9. The frontend registers with Beams via `window.registerPushNotifications()` in `resources/js/app.js`.
+**Flow:**
+1. `BabyActionObserver::created()` → calls `LocalNotificationScheduler::scheduleFor($action)`
+2. Scheduler loads (or creates) the `NotificationSetting` for the action type.
+3. Skips silently if: `enabled = false`, reference time is null, or `fire_at` is already in the past.
+4. Calculates `fire_at = reference_time + notify_after_minutes`.
+5. Calls `LocalNotifications::schedule([...])` with a Unix timestamp and a deep-link URL to the action's edit page.
+6. Sets `notification_scheduled_at = now()` on the `BabyAction`.
+7. On update: if `started_at`, `finished_at`, or `baby_action_type_id` changed → reschedule (cancel + re-schedule).
+8. On delete: cancel the scheduled notification.
+9. On app boot (`NativeServiceProvider`): resyncs all `notification_scheduled_at IS NOT NULL` actions once per session (cached 5 min) to recover OS alarms cleared after device reboot.
 
-Users configure their notification preferences at `/notification-settings` (one setting per action type: Eat, Sleep). Each setting includes: enabled toggle, notify-from selector (start time / end time), and notify-after-minutes input.
+**Settings change cascade:** When a `NotificationSetting` is saved with changed values, `NotificationSettings\Index` calls `rescheduleAllForType()` or `cancelAllForType()` on the scheduler, which batch-updates all affected `BabyAction` records.
+
+Users configure preferences at `/notification-settings` (one setting per action type). Each setting: enabled toggle, notify-from selector (start/end time), notify-after-minutes input.
 
 ## Testing
 

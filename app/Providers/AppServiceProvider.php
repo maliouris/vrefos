@@ -2,9 +2,8 @@
 
 namespace App\Providers;
 
-use App\Contracts\PushNotifications;
-use App\Services\BeamsClientService;
-use App\Services\BeamsNotificationsService;
+use App\Models\BabyAction;
+use App\Observers\BabyActionObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -14,13 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(BeamsClientService::class, fn () => new BeamsClientService([
-            'instanceId' => config('pusher.id'),
-            'secretKey' => config('pusher.key'),
-        ]
-        ));
-
-        $this->app->singleton(PushNotifications::class, BeamsNotificationsService::class);
+        //
     }
 
     /**
@@ -28,6 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        BabyAction::observe(BabyActionObserver::class);
     }
 }

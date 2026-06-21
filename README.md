@@ -1,66 +1,79 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Brefos
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.) and receive local notifications when it's time for the next session.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend:** PHP 8.5, Laravel 13, NativePHP Mobile v3
+- **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2
+- **Database:** SQLite (on-device via NativePHP), MySQL 8.0 via Docker for local dev
+- **Notifications:** On-device local notifications (`ikromjon/nativephp-mobile-local-notifications`)
+- **Dev tools:** Vite, Laravel Pint, mise (PHP 8.5 + Node 24)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Running the Project
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+./vendor/bin/sail up -d   # Start MySQL Docker container
+php artisan migrate
+npm run dev               # Vite dev server
+```
 
-## Learning Laravel
+> **Note:** Sail manages only the MySQL container. PHP, Composer, and Node run directly via mise. Never use `sail artisan`, `sail composer`, or `sail npm`.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Building for Android
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+npm run build -- --mode=android
+php artisan native:run android
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Key Commands
 
-## Laravel Sponsors
+```bash
+php artisan migrate          # Run database migrations
+php artisan test --compact   # Run tests
+./vendor/bin/pint            # Format PHP code
+php artisan native:watch     # Hot reload during development
+php artisan native:tail      # Stream device logs
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Architecture
 
-### Premium Partners
+### Notification System
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Reminders are delivered as **on-device local notifications** — no server, no internet required.
 
-## Contributing
+1. When a `BabyAction` is saved, `BabyActionObserver` triggers `LocalNotificationScheduler`.
+2. The scheduler calculates `fire_at = reference_time + notify_after_minutes` based on the user's `NotificationSetting`.
+3. Skips silently if: notifications disabled, reference time is null, or `fire_at` is already in the past.
+4. The OS delivers the notification at `fire_at`; tapping it opens the action's edit page.
+5. On app boot, `NativeServiceProvider` resyncs all pending notifications (guards against OS clearing alarms on reboot).
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Data Model
 
-## Code of Conduct
+```
+Baby → hasMany → BabyAction → belongsTo → BabyActionType
+                 BabyAction → hasOne    → BabyActionEatDetail
+NotificationSetting → belongsTo → BabyActionType
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at`
 
-## Security Vulnerabilities
+`NotificationSetting` fields: `baby_action_type_id`, `enabled`, `notify_after_minutes`, `notify_from` (`started_at` / `finished_at`)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Key Files
 
-## License
+| File | Purpose |
+|------|---------|
+| `app/Services/LocalNotificationScheduler.php` | Schedules/cancels/reschedules OS notifications |
+| `app/Observers/BabyActionObserver.php` | Auto-triggers scheduler on model events |
+| `app/Livewire/Pages/NotificationSettings/Index.php` | User notification preferences + cascade |
+| `app/Providers/NativeServiceProvider.php` | Requests permission, resyncs on boot |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testing
+
+```bash
+php artisan test --compact
+```
+
+Tests use `LocalNotifications::fake()` so they run without a device.

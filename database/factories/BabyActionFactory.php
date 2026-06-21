@@ -22,7 +22,6 @@ class BabyActionFactory extends Factory
             'baby_action_type_id' => BabyActionType::query()->inRandomOrder()->first()?->id ?? 1,
             'started_at' => fake()->dateTimeBetween('-7 days', 'now'),
             'finished_at' => fake()->optional(0.7)->dateTimeBetween('-6 days', 'now'),
-            'reminders' => 0,
         ];
     }
 }

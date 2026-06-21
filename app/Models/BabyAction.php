@@ -17,12 +17,13 @@ class BabyAction extends Model
         'baby_id',
         'started_at',
         'finished_at',
-        'reminders',
+        'notification_scheduled_at',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
+        'notification_scheduled_at' => 'datetime',
     ];
 
     public function baby(): BelongsTo

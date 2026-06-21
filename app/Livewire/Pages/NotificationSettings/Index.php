@@ -5,6 +5,7 @@ namespace App\Livewire\Pages\NotificationSettings;
 use App\Enums\NotifyFrom;
 use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
+use App\Services\LocalNotificationScheduler;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -32,7 +33,7 @@ class Index extends Component
         }
     }
 
-    public function save(): void
+    public function save(LocalNotificationScheduler $scheduler): void
     {
         foreach ($this->settings as $actionTypeId => $data) {
             $this->validate([
@@ -40,12 +41,32 @@ class Index extends Component
                 "settings.{$actionTypeId}.notify_from" => 'required|in:started_at,finished_at',
             ]);
 
+            $setting = NotificationSetting::firstWhere('baby_action_type_id', $actionTypeId);
+            $wasChanged = $setting->enabled !== $data['enabled']
+                || $setting->notify_after_minutes !== $data['notify_after_minutes']
+                || $setting->notify_from->value !== $data['notify_from'];
+
             NotificationSetting::where('baby_action_type_id', $actionTypeId)
                 ->update([
                     'enabled' => $data['enabled'],
                     'notify_after_minutes' => $data['notify_after_minutes'],
                     'notify_from' => $data['notify_from'],
                 ]);
+
+            if ($wasChanged) {
+                $actionType = BabyActionType::find($actionTypeId);
+                if ($data['enabled']) {
+                    $count = $scheduler->rescheduleAllForType($actionType);
+                    if ($count > 0) {
+                        $this->dispatch('notify', message: "Updated {$count} pending reminder(s).");
+                    }
+                } else {
+                    $count = $scheduler->cancelAllForType($actionType);
+                    if ($count > 0) {
+                        $this->dispatch('notify', message: "Cancelled {$count} pending reminder(s).");
+                    }
+                }
+            }
         }
 
         session()->flash('success', 'Notification settings saved.');
