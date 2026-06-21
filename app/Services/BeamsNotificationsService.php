@@ -8,7 +8,7 @@ readonly class BeamsNotificationsService implements PushNotifications
 {
     public function __construct(private BeamsClientService $client) {}
 
-    public function send(string $title, string $url, array $devices, array $users, string $body = ''): void
+    public function send(string $title, string $url, array $devices, string $body = ''): void
     {
         $payload = array_map(function ($device) use ($title, $body, $url) {
             return [
@@ -22,9 +22,6 @@ readonly class BeamsNotificationsService implements PushNotifications
             ];
         }, $devices);
 
-        if (! empty($users)) {
-            $beamsUsers = array_map(fn ($user) => strval($user->id), $users);
-            $this->client->publishToUsers($beamsUsers, $payload);
-        }
+        $this->client->publishToInterests(['vrefos-default'], $payload);
     }
 }

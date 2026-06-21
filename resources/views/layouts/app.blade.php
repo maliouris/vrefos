@@ -9,7 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="min-h-screen font-sans antialiased bg-base-200">
+<body class="min-h-screen font-sans antialiased bg-base-200 nativephp-safe-area">
 
     {{-- NAVBAR --}}
     <x-mary-nav sticky full-width>
@@ -33,7 +33,7 @@
     {{-- MAIN --}}
     <x-mary-main with-nav full-width>
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
-            <x-mary-menu activate-by-route>
+            <x-mary-menu activate-by-route style="padding-top: env(safe-area-inset-top)">
                 <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
                 <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
                 <x-mary-menu-item title="Notifications" icon="o-bell" link="{{ route('notification-settings.edit') }}" />

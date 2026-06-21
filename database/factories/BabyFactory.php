@@ -20,7 +20,6 @@ class BabyFactory extends Factory
         return [
             'name' => fake()->firstName(),
             'birth_date' => fake()->date(),
-            'gender' => fake()->randomElement(['male', 'female']),
         ];
     }
 }

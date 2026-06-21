@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\BabyAction;
 
 use App\Enums\BreastSide;
 use App\Enums\FoodType;
+use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,6 @@ class Edit extends Component
 
     public function mount(BabyAction $babyAction): void
     {
-        $this->authorize('update', $babyAction);
         $this->babyAction = $babyAction;
         $this->baby_id = $babyAction->baby_id;
         $this->baby_action_type_id = $babyAction->baby_action_type_id;
@@ -100,7 +100,7 @@ class Edit extends Component
 
     public function render()
     {
-        $babies = auth()->user()->babies()->get()->map(fn ($b) => ['id' => $b->id, 'name' => $b->name]);
+        $babies = Baby::all()->map(fn ($b) => ['id' => $b->id, 'name' => $b->name]);
         $actionTypes = BabyActionType::all()->map(fn ($t) => ['id' => $t->id, 'name' => $t->name]);
 
         $foodTypes = collect(FoodType::cases())

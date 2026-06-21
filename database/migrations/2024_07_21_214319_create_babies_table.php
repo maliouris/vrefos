@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->enum('gender', ['male', 'female']);
             $table->date('birth_date');
-            $table->foreignId('user_id')->constrained()->onUpdate('cascade')
+            $table->foreignId('user_id')->nullable()->constrained()->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->timestamps();
         });

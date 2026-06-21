@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Baby;
 
+use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -19,7 +20,7 @@ class Create extends Component
             'birth_date' => 'required|date',
         ]);
 
-        auth()->user()->babies()->create([
+        Baby::create([
             'name' => $this->name,
             'birth_date' => $this->birth_date,
         ]);

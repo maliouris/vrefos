@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Baby;
 
+use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -12,7 +13,7 @@ class Index extends Component
 
     public function render()
     {
-        $babies = auth()->user()->babies()->get();
+        $babies = Baby::all();
 
         return view('livewire.pages.baby.index', compact('babies'));
     }

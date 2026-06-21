@@ -15,12 +15,11 @@ class Index extends Component
 
     public function mount(): void
     {
-        $user = auth()->user();
         $actionTypes = BabyActionType::all();
 
         foreach ($actionTypes as $actionType) {
             $setting = NotificationSetting::firstOrCreate(
-                ['user_id' => $user->id, 'baby_action_type_id' => $actionType->id],
+                ['baby_action_type_id' => $actionType->id],
                 ['enabled' => true, 'notify_after_minutes' => 180, 'notify_from' => NotifyFrom::StartedAt]
             );
 
@@ -35,16 +34,13 @@ class Index extends Component
 
     public function save(): void
     {
-        $user = auth()->user();
-
         foreach ($this->settings as $actionTypeId => $data) {
             $this->validate([
                 "settings.{$actionTypeId}.notify_after_minutes" => 'required|integer|min:1|max:10080',
                 "settings.{$actionTypeId}.notify_from" => 'required|in:started_at,finished_at',
             ]);
 
-            NotificationSetting::where('user_id', $user->id)
-                ->where('baby_action_type_id', $actionTypeId)
+            NotificationSetting::where('baby_action_type_id', $actionTypeId)
                 ->update([
                     'enabled' => $data['enabled'],
                     'notify_after_minutes' => $data['notify_after_minutes'],

@@ -17,7 +17,6 @@ class Edit extends Component
 
     public function mount(Baby $baby): void
     {
-        $this->authorize('update', $baby);
         $this->baby = $baby;
         $this->name = $baby->name;
         $this->birth_date = $baby->birth_date->format('Y-m-d');

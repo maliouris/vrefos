@@ -12,10 +12,9 @@ class Index extends Component
 {
     public function render()
     {
-        $hasBabies = Baby::where('user_id', auth()->id())->exists();
+        $hasBabies = Baby::exists();
 
         $babyActions = BabyAction::with(['baby', 'babyActionType', 'eatDetail'])
-            ->whereHas('baby', fn ($q) => $q->where('user_id', auth()->id()))
             ->orderByDesc('started_at')
             ->get();
 

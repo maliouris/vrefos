@@ -8,7 +8,6 @@ use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,16 +15,13 @@ class SendBabyActionsRemindersTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $user;
-
     private Baby $baby;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->user = User::factory()->create();
-        $this->baby = Baby::factory()->create(['user_id' => $this->user->id]);
+        $this->baby = Baby::factory()->create();
     }
 
     public function test_sends_reminder_for_eat_action_when_notify_from_started_at_and_threshold_reached(): void
@@ -38,7 +34,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -63,7 +58,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -88,7 +82,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -113,7 +106,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => now()->subMinutes(200),
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -138,7 +130,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => now()->subMinutes(120),
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -163,7 +154,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 180,
@@ -195,7 +185,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 60,
@@ -228,7 +217,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => now()->subMinutes(61),
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => true,
             'notify_after_minutes' => 60,
@@ -254,7 +242,6 @@ class SendBabyActionsRemindersTest extends TestCase
             'finished_at' => null,
         ]);
         NotificationSetting::create([
-            'user_id' => $this->user->id,
             'baby_action_type_id' => $actionType->id,
             'enabled' => false,
             'notify_after_minutes' => 180,

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('notification_settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('baby_action_type_id')->constrained()->cascadeOnDelete();
             $table->boolean('enabled')->default(true);
             $table->unsignedInteger('notify_after_minutes')->default(180);

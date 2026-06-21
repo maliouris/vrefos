@@ -16,7 +16,6 @@ readonly class BabyActionsService
 
         $this->pushNotifications->send('Ready for the waaah concert?',
             $this->urlGenerator->to('/'), ['web'],
-            [[$babyAction->baby->user]],
             "Tick-tock! You baby {$babyAction->baby->name} should {$action}. It's been almost 3 hours since the last time.");
 
         $babyAction->reminders++;

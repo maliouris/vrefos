@@ -30,14 +30,12 @@ class SendBabyActionsReminders extends Command
     public function handle(BabyActionsService $babyActionsService): void
     {
         $babyActions = BabyAction::where('reminders', '<', 1)
-            ->with('baby.user', 'babyActionType')
+            ->with('baby', 'babyActionType')
             ->get();
 
         foreach ($babyActions as $babyAction) {
-            $user = $babyAction->baby->user;
-
             $setting = NotificationSetting::firstOrCreate(
-                ['user_id' => $user->id, 'baby_action_type_id' => $babyAction->baby_action_type_id],
+                ['baby_action_type_id' => $babyAction->baby_action_type_id],
                 ['enabled' => true, 'notify_after_minutes' => 180, 'notify_from' => NotifyFrom::StartedAt]
             );
 
