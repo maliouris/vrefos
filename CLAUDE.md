@@ -66,6 +66,8 @@ NotificationSetting → belongsTo → BabyActionType
 - `resources/views/layouts/app.blade.php` — Main app layout (MaryUI `x-mary-main`, sidebar, navbar)
 - `resources/js/app.js` — Minimal JS entry point (no notification logic — notifications are handled natively)
 
+The **BabyAction create/edit forms** pick Baby, Action Type, Food Type, and Breast Side via always-visible **segmented button groups** (wrapping `x-mary-button`s), not dropdowns — one tap to select, tap the selected one again to deselect to `null` (applies to every field, including the required ones). Each field has a `toggle*` action method (`toggleBaby`, `toggleActionType`, `toggleFoodType`, `toggleBreastSide`) used via `wire:click`; these assign the property directly, so they must call the relevant `updated*` hook themselves (e.g. `toggleActionType` → `updatedBabyActionTypeId`) to fire the clear cascades — direct assignment in an action does **not** trigger Livewire `updated*` hooks the way `wire:model`/`$set` does.
+
 ### MaryUI Components
 
 All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`):

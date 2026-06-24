@@ -25,8 +25,8 @@ class BabyActionManagementTest extends TestCase
         $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
 
         Livewire::test(Create::class)
-            ->set('baby_id', $baby->id)
-            ->set('baby_action_type_id', $sleep->id)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $sleep->id)
             ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
             ->call('save')
             ->assertHasNoErrors()
@@ -43,10 +43,10 @@ class BabyActionManagementTest extends TestCase
         $eat = BabyActionType::factory()->create(['name' => 'Eat']);
 
         Livewire::test(Create::class)
-            ->set('baby_id', $baby->id)
-            ->set('baby_action_type_id', $eat->id)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $eat->id)
             ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
-            ->set('food_type', FoodType::Formula->value)
+            ->call('toggleFoodType', FoodType::Formula->value)
             ->call('save')
             ->assertHasNoErrors();
 
@@ -62,9 +62,27 @@ class BabyActionManagementTest extends TestCase
         $eat = BabyActionType::factory()->create(['name' => 'Eat']);
 
         Livewire::test(Create::class)
-            ->set('baby_id', $baby->id)
-            ->set('baby_action_type_id', $eat->id)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $eat->id)
             ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $action = BabyAction::firstWhere('baby_id', $baby->id);
+        $this->assertNull($action->eatDetail);
+    }
+
+    public function test_create_eat_action_with_toggled_food_type_does_not_create_eat_detail(): void
+    {
+        $baby = Baby::factory()->create();
+        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Create::class)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $eat->id)
+            ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
+            ->call('toggleFoodType', FoodType::Formula->value)
+            ->call('toggleFoodType', FoodType::Formula->value)
             ->call('save')
             ->assertHasNoErrors();
 
@@ -78,11 +96,11 @@ class BabyActionManagementTest extends TestCase
         $eat = BabyActionType::factory()->create(['name' => 'Eat']);
 
         Livewire::test(Create::class)
-            ->set('baby_id', $baby->id)
-            ->set('baby_action_type_id', $eat->id)
-            ->set('food_type', FoodType::BreastMilk->value)
-            ->set('breast_side', BreastSide::Left->value)
-            ->set('food_type', FoodType::Formula->value)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $eat->id)
+            ->call('toggleFoodType', FoodType::BreastMilk->value)
+            ->call('toggleBreastSide', BreastSide::Left->value)
+            ->call('toggleFoodType', FoodType::Formula->value)
             ->assertSet('breast_side', null);
     }
 
@@ -92,8 +110,8 @@ class BabyActionManagementTest extends TestCase
         $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
 
         Livewire::test(Create::class)
-            ->set('baby_id', $baby->id)
-            ->set('baby_action_type_id', $sleep->id)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $sleep->id)
             ->set('started_at', now()->format('Y-m-d\TH:i'))
             ->set('finished_at', now()->subHour()->format('Y-m-d\TH:i'))
             ->call('save')
@@ -122,7 +140,7 @@ class BabyActionManagementTest extends TestCase
         $action->eatDetail()->create(['food_type' => FoodType::Formula->value]);
 
         Livewire::test(Edit::class, ['babyAction' => $action])
-            ->set('baby_action_type_id', $sleep->id)
+            ->call('toggleActionType', $sleep->id)
             ->call('update')
             ->assertHasNoErrors();
 
@@ -142,7 +160,7 @@ class BabyActionManagementTest extends TestCase
         $action->eatDetail()->create(['food_type' => FoodType::Formula->value]);
 
         Livewire::test(Edit::class, ['babyAction' => $action])
-            ->set('food_type', FoodType::Vegetables->value)
+            ->call('toggleFoodType', FoodType::Vegetables->value)
             ->call('update')
             ->assertHasNoErrors();
 

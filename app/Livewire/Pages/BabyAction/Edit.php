@@ -50,6 +50,28 @@ class Edit extends Component
         return BabyActionType::find($this->baby_action_type_id)?->name === 'Eat';
     }
 
+    public function toggleBaby(int $babyId): void
+    {
+        $this->baby_id = $this->baby_id === $babyId ? null : $babyId;
+    }
+
+    public function toggleActionType(int $actionTypeId): void
+    {
+        $this->baby_action_type_id = $this->baby_action_type_id === $actionTypeId ? null : $actionTypeId;
+        $this->updatedBabyActionTypeId();
+    }
+
+    public function toggleFoodType(string $foodType): void
+    {
+        $this->food_type = $this->food_type === $foodType ? null : $foodType;
+        $this->updatedFoodType();
+    }
+
+    public function toggleBreastSide(string $breastSide): void
+    {
+        $this->breast_side = $this->breast_side === $breastSide ? null : $breastSide;
+    }
+
     public function updatedBabyActionTypeId(): void
     {
         if (! $this->isEatAction) {

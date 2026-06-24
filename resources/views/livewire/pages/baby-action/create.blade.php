@@ -3,24 +3,63 @@
 
     <x-mary-card>
         <x-mary-form wire:submit="save">
-            <x-mary-select label="Baby" wire:model="baby_id" :options="$babies" placeholder="Select a baby" required />
-            <x-mary-select label="Action Type" wire:model.live="baby_action_type_id" :options="$actionTypes" placeholder="Select action type" required />
+            <div>
+                <label class="label"><span class="label-text">Baby</span></label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($babies as $b)
+                        <x-mary-button
+                            label="{{ $b['name'] }}"
+                            wire:click="toggleBaby({{ $b['id'] }})"
+                            class="btn-sm {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
+                        />
+                    @endforeach
+                </div>
+                @error('baby_id') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <div>
+                <label class="label"><span class="label-text">Action Type</span></label>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($actionTypes as $t)
+                        <x-mary-button
+                            label="{{ $t['name'] }}"
+                            wire:click="toggleActionType({{ $t['id'] }})"
+                            class="btn-sm {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
+                        />
+                    @endforeach
+                </div>
+                @error('baby_action_type_id') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            </div>
 
             @if ($this->isEatAction)
-                <x-mary-select
-                    label="Food Type"
-                    wire:model.live="food_type"
-                    :options="$foodTypes"
-                    placeholder="Select food type (optional)"
-                />
+                <div>
+                    <label class="label"><span class="label-text">Food Type</span></label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($foodTypes as $ft)
+                            <x-mary-button
+                                label="{{ $ft['name'] }}"
+                                wire:click="toggleFoodType('{{ $ft['id'] }}')"
+                                class="btn-sm {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            />
+                        @endforeach
+                    </div>
+                    @error('food_type') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                </div>
 
                 @if ($food_type === \App\Enums\FoodType::BreastMilk->value)
-                    <x-mary-select
-                        label="Breast Side"
-                        wire:model="breast_side"
-                        :options="$breastSides"
-                        placeholder="Select breast side (optional)"
-                    />
+                    <div>
+                        <label class="label"><span class="label-text">Breast Side</span></label>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($breastSides as $bs)
+                                <x-mary-button
+                                    label="{{ $bs['name'] }}"
+                                    wire:click="toggleBreastSide('{{ $bs['id'] }}')"
+                                    class="btn-sm {{ $breast_side === $bs['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                />
+                            @endforeach
+                        </div>
+                        @error('breast_side') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                    </div>
                 @endif
             @endif
 
