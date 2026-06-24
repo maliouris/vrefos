@@ -10,6 +10,17 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    public function finishNow(BabyAction $babyAction): void
+    {
+        if ($babyAction->finished_at !== null) {
+            return;
+        }
+
+        $babyAction->update(['finished_at' => now()]);
+
+        session()->flash('success', 'Baby action finished.');
+    }
+
     public function render()
     {
         $hasBabies = Baby::exists();

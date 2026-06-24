@@ -7,6 +7,7 @@ use App\Enums\FoodType;
 use App\Enums\NotifyFrom;
 use App\Livewire\Pages\BabyAction\Create;
 use App\Livewire\Pages\BabyAction\Edit;
+use App\Livewire\Pages\BabyAction\Index;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
@@ -191,5 +192,44 @@ class BabyActionManagementTest extends TestCase
         $action->delete();
 
         $this->assertDatabaseMissing('baby_action_eat_details', ['id' => $detail->id]);
+    }
+
+    public function test_finish_now_sets_finished_at_to_current_time(): void
+    {
+        $baby = Baby::factory()->create();
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
+
+        $action = BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $sleep->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => null,
+        ]);
+
+        Livewire::test(Index::class)
+            ->call('finishNow', $action->id)
+            ->assertHasNoErrors();
+
+        $finishedAt = $action->fresh()->finished_at;
+        $this->assertNotNull($finishedAt);
+        $this->assertEqualsWithDelta(now()->timestamp, $finishedAt->timestamp, 5);
+    }
+
+    public function test_finish_now_is_noop_for_already_finished_action(): void
+    {
+        $baby = Baby::factory()->create();
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
+
+        $finishedAt = now()->subMinutes(30);
+        $action = BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $sleep->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => $finishedAt,
+        ]);
+
+        Livewire::test(Index::class)
+            ->call('finishNow', $action->id)
+            ->assertHasNoErrors();
+
+        $this->assertEquals($finishedAt->timestamp, $action->fresh()->finished_at->timestamp);
     }
 }

@@ -37,7 +37,18 @@
             @endscope
 
             @scope('actions', $action)
-                <x-mary-button label="Edit" icon="o-pencil" link="{{ route('baby_actions.edit', $action) }}" class="btn-ghost btn-sm" />
+                <div class="flex items-center gap-2">
+                    @unless ($action->finished_at)
+                        <x-mary-button
+                            label="Finish now"
+                            icon="o-flag"
+                            class="btn-ghost btn-sm"
+                            wire:click="finishNow({{ $action->id }})"
+                            wire:confirm="Mark this action as finished now?"
+                        />
+                    @endunless
+                    <x-mary-button label="Edit" icon="o-pencil" link="{{ route('baby_actions.edit', $action) }}" class="btn-ghost btn-sm" />
+                </div>
             @endscope
         </x-mary-table>
     @endif

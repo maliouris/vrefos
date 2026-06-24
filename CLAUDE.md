@@ -68,6 +68,8 @@ NotificationSetting → belongsTo → BabyActionType
 
 The **BabyAction create/edit forms** pick Baby, Action Type, Food Type, and Breast Side via always-visible **segmented button groups** (wrapping `x-mary-button`s), not dropdowns — one tap to select, tap the selected one again to deselect to `null` (applies to every field, including the required ones). Each field has a `toggle*` action method (`toggleBaby`, `toggleActionType`, `toggleFoodType`, `toggleBreastSide`) used via `wire:click`; these assign the property directly, so they must call the relevant `updated*` hook themselves (e.g. `toggleActionType` → `updatedBabyActionTypeId`) to fire the clear cascades — direct assignment in an action does **not** trigger Livewire `updated*` hooks the way `wire:model`/`$set` does.
 
+The **BabyAction list** (`Pages\BabyAction\Index`) shows a **Finish now** button (`o-flag` icon, `wire:confirm`) next to Edit, rendered only for rows where `finished_at` is null. Its `finishNow(BabyAction $babyAction)` action stamps `finished_at = now()` (no-op if already finished); the `BabyActionObserver` then reschedules any `NotifyFrom::FinishedAt` rules automatically.
+
 ### MaryUI Components
 
 All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`):
