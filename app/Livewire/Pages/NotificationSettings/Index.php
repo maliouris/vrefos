@@ -13,72 +13,107 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    public array $settings = [];
+    public bool $showModal = false;
 
-    public function mount(): void
+    public ?int $editingId = null;
+
+    public ?int $ruleTypeId = null;
+
+    public int $notifyAfterMinutes = 180;
+
+    public string $notifyFrom = 'started_at';
+
+    public ?string $message = null;
+
+    public bool $enabled = true;
+
+    public function openCreate(int $typeId): void
     {
-        $actionTypes = BabyActionType::all();
-
-        foreach ($actionTypes as $actionType) {
-            $setting = NotificationSetting::firstOrCreate(
-                ['baby_action_type_id' => $actionType->id],
-                ['enabled' => true, 'notify_after_minutes' => 180, 'notify_from' => NotifyFrom::StartedAt]
-            );
-
-            $this->settings[$actionType->id] = [
-                'name' => $actionType->name,
-                'enabled' => $setting->enabled,
-                'notify_after_minutes' => $setting->notify_after_minutes,
-                'notify_from' => $setting->notify_from->value,
-            ];
-        }
+        $this->resetForm();
+        $this->ruleTypeId = $typeId;
+        $this->showModal = true;
     }
 
-    public function save(LocalNotificationScheduler $scheduler): void
+    public function openEdit(int $settingId): void
     {
-        foreach ($this->settings as $actionTypeId => $data) {
-            $this->validate([
-                "settings.{$actionTypeId}.notify_after_minutes" => 'required|integer|min:1|max:10080',
-                "settings.{$actionTypeId}.notify_from" => ['required', Rule::enum(NotifyFrom::class)],
-            ]);
+        $setting = NotificationSetting::findOrFail($settingId);
 
-            $enabled = (bool) $data['enabled'];
-            $notifyAfterMinutes = (int) $data['notify_after_minutes'];
-            $notifyFrom = $data['notify_from'];
+        $this->editingId = $setting->id;
+        $this->ruleTypeId = $setting->baby_action_type_id;
+        $this->notifyAfterMinutes = $setting->notify_after_minutes;
+        $this->notifyFrom = $setting->notify_from->value;
+        $this->message = $setting->message;
+        $this->enabled = $setting->enabled;
+        $this->showModal = true;
+    }
 
-            $setting = NotificationSetting::firstWhere('baby_action_type_id', $actionTypeId);
-            $wasChanged = $setting->enabled !== $enabled
-                || $setting->notify_after_minutes !== $notifyAfterMinutes
-                || $setting->notify_from->value !== $notifyFrom;
+    public function saveRule(LocalNotificationScheduler $scheduler): void
+    {
+        $this->validate([
+            'ruleTypeId' => ['required', 'exists:baby_action_types,id'],
+            'notifyAfterMinutes' => 'required|integer|min:1|max:10080',
+            'notifyFrom' => ['required', Rule::enum(NotifyFrom::class)],
+            'message' => 'nullable|string|max:255',
+            'enabled' => 'boolean',
+        ]);
 
-            NotificationSetting::where('baby_action_type_id', $actionTypeId)
-                ->update([
-                    'enabled' => $enabled,
-                    'notify_after_minutes' => $notifyAfterMinutes,
-                    'notify_from' => $notifyFrom,
-                ]);
+        $type = BabyActionType::findOrFail($this->ruleTypeId);
 
-            if ($wasChanged) {
-                $actionType = BabyActionType::find($actionTypeId);
-                if ($enabled) {
-                    $count = $scheduler->rescheduleAllForType($actionType);
-                    if ($count > 0) {
-                        $this->dispatch('notify', message: "Updated {$count} pending reminder(s).");
-                    }
-                } else {
-                    $count = $scheduler->cancelAllForType($actionType);
-                    if ($count > 0) {
-                        $this->dispatch('notify', message: "Cancelled {$count} pending reminder(s).");
-                    }
-                }
-            }
+        $attributes = [
+            'enabled' => $this->enabled,
+            'notify_after_minutes' => $this->notifyAfterMinutes,
+            'notify_from' => $this->notifyFrom,
+            'message' => $this->message,
+        ];
+
+        if ($this->editingId !== null) {
+            NotificationSetting::findOrFail($this->editingId)->update($attributes);
+        } else {
+            NotificationSetting::create($attributes + ['baby_action_type_id' => $type->id]);
         }
 
-        session()->flash('success', 'Notification settings saved.');
+        $scheduler->rescheduleAllForType($type);
+
+        $this->showModal = false;
+        $this->resetForm();
+
+        session()->flash('success', 'Notification rule saved.');
+    }
+
+    public function deleteRule(int $settingId, LocalNotificationScheduler $scheduler): void
+    {
+        $setting = NotificationSetting::findOrFail($settingId);
+        $type = $setting->babyActionType;
+
+        $setting->delete();
+
+        $scheduler->rescheduleAllForType($type);
+
+        session()->flash('success', 'Notification rule deleted.');
+    }
+
+    public function toggleEnabled(int $settingId, LocalNotificationScheduler $scheduler): void
+    {
+        $setting = NotificationSetting::findOrFail($settingId);
+        $setting->update(['enabled' => ! $setting->enabled]);
+
+        $scheduler->rescheduleAllForType($setting->babyActionType);
+    }
+
+    private function resetForm(): void
+    {
+        $this->editingId = null;
+        $this->ruleTypeId = null;
+        $this->notifyAfterMinutes = 180;
+        $this->notifyFrom = 'started_at';
+        $this->message = null;
+        $this->enabled = true;
     }
 
     public function render()
     {
-        return view('livewire.pages.notification-settings.index');
+        return view('livewire.pages.notification-settings.index', [
+            'actionTypes' => BabyActionType::with('notificationSettings')->orderBy('name')->get(),
+        ]);
     }
 }

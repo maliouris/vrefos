@@ -18,4 +18,9 @@ class BabyActionType extends Model
     {
         return $this->hasMany(BabyAction::class);
     }
+
+    public function notificationSettings(): HasMany
+    {
+        return $this->hasMany(NotificationSetting::class);
+    }
 }

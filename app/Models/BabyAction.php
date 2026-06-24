@@ -17,12 +17,14 @@ class BabyAction extends Model
         'started_at',
         'finished_at',
         'notification_scheduled_at',
+        'scheduled_notification_keys',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
         'notification_scheduled_at' => 'datetime',
+        'scheduled_notification_keys' => 'array',
     ];
 
     public function baby(): BelongsTo

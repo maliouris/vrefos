@@ -53,11 +53,11 @@ Baby → hasMany → BabyAction → belongsTo → BabyActionType
 NotificationSetting → belongsTo → BabyActionType
 ```
 
-`BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at` (nullable datetime — set when an OS notification is scheduled, null otherwise)
+`BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at` (nullable datetime — set when at least one OS notification is scheduled, null otherwise), `scheduled_notification_keys` (nullable, cast to `array` — the exact OS notification keys scheduled for this action, e.g. `["action-12-setting-3"]`, so they can be cancelled even after an action-type change or rule deletion)
 
 `BabyActionEatDetail` fields: `baby_action_id`, `food_type` (nullable, cast to `FoodType` enum), `breast_side` (nullable, cast to `BreastSide` enum). One-to-one with `BabyAction`; cascade-deleted with parent. Only created when action type is "Eat" and a food type is selected.
 
-`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`). Unique on `baby_action_type_id`. Created automatically via `firstOrCreate` when a `BabyAction` is saved.
+`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`), `message` (nullable string — optional custom notification body; blank falls back to default text). Each row is **one rule**; a type can have **many** rules (no unique constraint). Default rules are seeded by migrations, not created lazily. Messages support placeholders substituted when the notification is built: `#{minutes}` (the rule's delay), `#{action}` (action type name, lowercased), `#{baby}` (baby's name).
 
 ### Frontend
 
@@ -105,18 +105,18 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 
 **Flow:**
 1. `BabyActionObserver::created()` → calls `LocalNotificationScheduler::scheduleFor($action)`
-2. Scheduler loads (or creates) the `NotificationSetting` for the action type.
-3. Skips silently if: `enabled = false`, reference time is null, or `fire_at` is already in the past.
-4. Calculates `fire_at = reference_time + notify_after_minutes`.
-5. Calls `LocalNotifications::schedule([...])` with a Unix timestamp and a deep-link URL to the action's edit page.
-6. Sets `notification_scheduled_at = now()` on the `BabyAction`.
+2. Scheduler loads **all enabled** `NotificationSetting` rules for the action type (none → schedules nothing; no lazy default creation).
+3. For each rule, skips silently if reference time is null or `fire_at` is already in the past.
+4. Calculates `fire_at = reference_time + notify_after_minutes` per rule.
+5. For each eligible rule, calls `LocalNotifications::schedule([...])` with a unique key `action-{actionId}-setting-{ruleId}`, a Unix timestamp, the resolved title/body (default text or the rule's `message` with placeholders applied), and `data.action_id`.
+6. If any were scheduled, sets `notification_scheduled_at = now()` and stores every scheduled key in `scheduled_notification_keys` on the `BabyAction`; otherwise nulls both.
 7. On update: if `started_at`, `finished_at`, or `baby_action_type_id` changed → reschedule (cancel + re-schedule).
-8. On delete: cancel the scheduled notification.
+8. On delete: cancel every key in `scheduled_notification_keys` (robust against action-type change and rule deletion).
 9. On app boot (`NativeServiceProvider`): resyncs all `notification_scheduled_at IS NOT NULL` actions once per session (cached 5 min) to recover OS alarms cleared after device reboot.
 
-**Settings change cascade:** When a `NotificationSetting` is saved with changed values, `NotificationSettings\Index` calls `rescheduleAllForType()` or `cancelAllForType()` on the scheduler, which batch-updates all affected `BabyAction` records.
+**Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips past/ineligible ones).
 
-Users configure preferences at `/notification-settings` (one setting per action type). Each setting: enabled toggle, notify-from selector (start/end time), notify-after-minutes input.
+Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, optional custom message with placeholders, enabled). A type can have multiple rules. Default rules (Eat: 180 min from start; Sleep: 60 min from start with a wake-up message) are seeded via migration.
 
 ## Testing
 

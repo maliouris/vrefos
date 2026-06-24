@@ -7,43 +7,90 @@
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
     @endif
 
-    <x-mary-card>
-        <x-mary-form wire:submit="save">
-            <div class="space-y-6">
-                @foreach ($settings as $actionTypeId => $setting)
-                    <div class="border-b pb-6 last:border-b-0 last:pb-0">
-                        <h3 class="mb-4 text-lg font-semibold">{{ $setting['name'] }}</h3>
-                        <div class="flex flex-col gap-4">
+    <div class="space-y-6">
+        @foreach ($actionTypes as $actionType)
+            <x-mary-card>
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold">{{ $actionType->name }}</h3>
+                    <x-mary-button
+                        label="Add"
+                        icon="o-plus"
+                        class="btn-sm btn-primary"
+                        wire:click="openCreate({{ $actionType->id }})"
+                    />
+                </div>
+
+                @forelse ($actionType->notificationSettings as $rule)
+                    <div class="flex items-center justify-between gap-4 border-b py-3 last:border-b-0">
+                        <div class="flex items-center gap-3">
                             <x-mary-toggle
-                                label="Enable notifications"
-                                wire:model="settings.{{ $actionTypeId }}.enabled"
+                                wire:click="toggleEnabled({{ $rule->id }})"
+                                :checked="$rule->enabled"
                             />
-                            <x-mary-select
-                                label="Notify from"
-                                wire:model="settings.{{ $actionTypeId }}.notify_from"
-                                :options="[
-                                    ['id' => 'started_at', 'name' => 'Start time'],
-                                    ['id' => 'finished_at', 'name' => 'End time'],
-                                ]"
-                                option-value="id"
-                                option-label="name"
+                            <div>
+                                <div class="font-medium">
+                                    {{ $rule->notify_after_minutes }} min from
+                                    {{ $rule->notify_from === \App\Enums\NotifyFrom::FinishedAt ? 'end' : 'start' }}
+                                </div>
+                                @if (filled($rule->message))
+                                    <div class="text-sm opacity-70">{{ $rule->message }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <x-mary-button
+                                icon="o-pencil"
+                                class="btn-sm btn-ghost"
+                                wire:click="openEdit({{ $rule->id }})"
                             />
-                            <x-mary-input
-                                label="Notify after (minutes)"
-                                wire:model="settings.{{ $actionTypeId }}.notify_after_minutes"
-                                type="number"
-                                min="1"
-                                max="10080"
-                                hint="e.g. 180 = 3 hours, 60 = 1 hour"
+                            <x-mary-button
+                                icon="o-trash"
+                                class="btn-sm btn-ghost text-error"
+                                wire:click="deleteRule({{ $rule->id }})"
+                                wire:confirm="Delete this notification rule?"
                             />
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <p class="text-sm opacity-70">No notification rules yet.</p>
+                @endforelse
+            </x-mary-card>
+        @endforeach
+    </div>
+
+    <x-mary-modal wire:model="showModal" title="Notification rule">
+        <x-mary-form wire:submit="saveRule">
+            <div class="flex flex-col gap-4">
+                <x-mary-input
+                    label="Notify after (minutes)"
+                    wire:model="notifyAfterMinutes"
+                    type="number"
+                    min="1"
+                    max="10080"
+                    hint="e.g. 180 = 3 hours, 60 = 1 hour"
+                />
+                <x-mary-select
+                    label="Notify from"
+                    wire:model="notifyFrom"
+                    :options="[
+                        ['id' => 'started_at', 'name' => 'Start time'],
+                        ['id' => 'finished_at', 'name' => 'End time'],
+                    ]"
+                    option-value="id"
+                    option-label="name"
+                />
+                <x-mary-input
+                    label="Message (optional)"
+                    wire:model="message"
+                    hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}"
+                />
+                <x-mary-toggle label="Enabled" wire:model="enabled" />
             </div>
 
             <x-slot:actions>
+                <x-mary-button label="Cancel" wire:click="$set('showModal', false)" />
                 <x-mary-button label="Save" type="submit" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
-    </x-mary-card>
+    </x-mary-modal>
 </div>

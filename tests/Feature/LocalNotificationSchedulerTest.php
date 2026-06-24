@@ -23,10 +23,22 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->scheduler = app(LocalNotificationScheduler::class);
     }
 
+    private function settingFor(BabyActionType $type, array $overrides = []): NotificationSetting
+    {
+        return NotificationSetting::create(array_merge([
+            'baby_action_type_id' => $type->id,
+            'enabled' => true,
+            'notify_after_minutes' => 180,
+            'notify_from' => NotifyFrom::StartedAt,
+        ], $overrides));
+    }
+
     public function test_schedule_for_with_valid_times_sets_notification_scheduled_at(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType);
+
         $action = BabyAction::factory()
             ->for($baby)
             ->create([
@@ -40,21 +52,14 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertTrue($result);
         $action->refresh();
         $this->assertNotNull($action->notification_scheduled_at);
+        $this->assertCount(1, $action->scheduled_notification_keys);
     }
 
     public function test_schedule_for_with_finished_at_null_returns_false(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
-
-        NotificationSetting::firstOrCreate(
-            ['baby_action_type_id' => $actionType->id],
-            [
-                'enabled' => true,
-                'notify_after_minutes' => 180,
-                'notify_from' => NotifyFrom::FinishedAt,
-            ]
-        );
+        $this->settingFor($actionType, ['notify_from' => NotifyFrom::FinishedAt]);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -69,21 +74,14 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertFalse($result);
         $action->refresh();
         $this->assertNull($action->notification_scheduled_at);
+        $this->assertNull($action->scheduled_notification_keys);
     }
 
     public function test_schedule_for_with_fire_at_in_past_returns_false(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
-
-        NotificationSetting::firstOrCreate(
-            ['baby_action_type_id' => $actionType->id],
-            [
-                'enabled' => true,
-                'notify_after_minutes' => 1,
-                'notify_from' => NotifyFrom::StartedAt,
-            ]
-        );
+        $this->settingFor($actionType, ['notify_after_minutes' => 1]);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -104,15 +102,7 @@ class LocalNotificationSchedulerTest extends TestCase
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
-
-        NotificationSetting::firstOrCreate(
-            ['baby_action_type_id' => $actionType->id],
-            [
-                'enabled' => false,
-                'notify_after_minutes' => 180,
-                'notify_from' => NotifyFrom::StartedAt,
-            ]
-        );
+        $this->settingFor($actionType, ['enabled' => false]);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -127,6 +117,78 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertFalse($result);
         $action->refresh();
         $this->assertNull($action->notification_scheduled_at);
+    }
+
+    public function test_schedule_for_with_two_enabled_rules_schedules_two_keys(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $ruleA = $this->settingFor($actionType, ['notify_after_minutes' => 180]);
+        $ruleB = $this->settingFor($actionType, ['notify_after_minutes' => 240]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(1),
+                'finished_at' => null,
+            ]);
+
+        $result = $this->scheduler->scheduleFor($action);
+
+        $this->assertTrue($result);
+        $action->refresh();
+        $this->assertCount(2, $action->scheduled_notification_keys);
+        $this->assertContains("action-{$action->id}-setting-{$ruleA->id}", $action->scheduled_notification_keys);
+        $this->assertContains("action-{$action->id}-setting-{$ruleB->id}", $action->scheduled_notification_keys);
+    }
+
+    public function test_schedule_for_skips_disabled_rule_among_enabled(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $enabledRule = $this->settingFor($actionType, ['notify_after_minutes' => 180]);
+        $disabledRule = $this->settingFor($actionType, ['notify_after_minutes' => 240, 'enabled' => false]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(1),
+                'finished_at' => null,
+            ]);
+
+        $this->scheduler->scheduleFor($action);
+
+        $action->refresh();
+        $this->assertCount(1, $action->scheduled_notification_keys);
+        $this->assertContains("action-{$action->id}-setting-{$enabledRule->id}", $action->scheduled_notification_keys);
+        $this->assertNotContains("action-{$action->id}-setting-{$disabledRule->id}", $action->scheduled_notification_keys);
+    }
+
+    public function test_cancel_for_clears_all_stored_keys(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_after_minutes' => 180]);
+        $this->settingFor($actionType, ['notify_after_minutes' => 240]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(1),
+                'finished_at' => null,
+            ]);
+
+        $action->refresh();
+        $this->assertCount(2, $action->scheduled_notification_keys);
+
+        $this->scheduler->cancelFor($action);
+
+        $action->refresh();
+        $this->assertNull($action->notification_scheduled_at);
+        $this->assertNull($action->scheduled_notification_keys);
     }
 
     public function test_cancel_for_sets_notification_scheduled_at_to_null(): void
@@ -177,6 +239,7 @@ class LocalNotificationSchedulerTest extends TestCase
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -193,6 +256,7 @@ class LocalNotificationSchedulerTest extends TestCase
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -220,6 +284,7 @@ class LocalNotificationSchedulerTest extends TestCase
         $baby = Baby::factory()->create();
         $otherBaby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType);
 
         $action = BabyAction::factory()
             ->for($baby)
@@ -237,19 +302,42 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertEquals($originalScheduledAt, $action->notification_scheduled_at);
     }
 
+    public function test_action_type_change_swaps_scheduled_keys(): void
+    {
+        $baby = Baby::factory()->create();
+        $typeA = BabyActionType::factory()->create();
+        $typeB = BabyActionType::factory()->create();
+        $ruleA = $this->settingFor($typeA);
+        $ruleB = $this->settingFor($typeB);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $typeA->id,
+                'started_at' => now()->subHour(),
+            ]);
+
+        $action->refresh();
+        $this->assertEquals(["action-{$action->id}-setting-{$ruleA->id}"], $action->scheduled_notification_keys);
+
+        $action->update(['baby_action_type_id' => $typeB->id]);
+
+        $action->refresh();
+        $this->assertEquals(["action-{$action->id}-setting-{$ruleB->id}"], $action->scheduled_notification_keys);
+    }
+
     public function test_reschedule_all_for_type_reschedules_future_and_drops_past(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType);
 
-        // Default setting fires 180 minutes after started_at.
         // Future: started 1h ago → fires in ~2h → stays scheduled.
         $future = BabyAction::factory()
             ->for($baby)
             ->create([
                 'baby_action_type_id' => $actionType->id,
                 'started_at' => now()->subHour(),
-                'notification_scheduled_at' => now(),
             ]);
 
         // Past: started 4h ago → fires 1h ago → cannot be rescheduled.
@@ -258,7 +346,6 @@ class LocalNotificationSchedulerTest extends TestCase
             ->create([
                 'baby_action_type_id' => $actionType->id,
                 'started_at' => now()->subHours(4),
-                'notification_scheduled_at' => now(),
             ]);
 
         $count = $this->scheduler->rescheduleAllForType($actionType);

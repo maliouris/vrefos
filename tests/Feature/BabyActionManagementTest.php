@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Enums\BreastSide;
 use App\Enums\FoodType;
+use App\Enums\NotifyFrom;
 use App\Livewire\Pages\BabyAction\Create;
 use App\Livewire\Pages\BabyAction\Edit;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
+use App\Models\NotificationSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -151,6 +153,13 @@ class BabyActionManagementTest extends TestCase
     {
         $baby = Baby::factory()->create();
         $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        NotificationSetting::create([
+            'baby_action_type_id' => $eat->id,
+            'enabled' => true,
+            'notify_after_minutes' => 180,
+            'notify_from' => NotifyFrom::StartedAt,
+        ]);
 
         $action = BabyAction::factory()->for($baby)->create([
             'baby_action_type_id' => $eat->id,
