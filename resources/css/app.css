@@ -25,3 +25,19 @@
 .mary-table-pagination button {
     @apply cursor-pointer
 }
+
+/* Mobile: open the menu drawer below the sticky top bar, not over it.
+   Mirrors MaryUI's lg:top-[65px]/h-[calc(100vh-65px)] offset, plus the
+   native safe-area inset that the top bar sits below. */
+@media (max-width: 1023px) {
+    .drawer-side {
+        top: calc(65px + env(safe-area-inset-top));
+        height: calc(100dvh - 65px - env(safe-area-inset-top));
+    }
+
+    /* Inner sliding panel uses h-screen by default; match the reduced height
+       so its content doesn't overflow past the viewport. */
+    .drawer-side > div {
+        height: calc(100dvh - 65px - env(safe-area-inset-top));
+    }
+}
