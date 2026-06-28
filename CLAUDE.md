@@ -38,7 +38,7 @@ npm ...                                     # Run any npm command
 ### Backend
 
 - `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting` (no `User` model — the app is single-user)
-- `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls are guarded with `function_exists('nativephp_call')` for web/test compatibility.
+- `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls go through the `dispatchSchedule()` / `dispatchCancel()` seams, guarded with `function_exists('nativephp_call')` for web/test compatibility (the seams also let tests capture the exact scheduled payload without a native runtime).
 - `app/Observers/BabyActionObserver.php` — Triggers the scheduler on `created`, `updated` (time/type fields), and `deleted` events.
 - `app/Providers/NativeServiceProvider.php` — Requests notification permission on boot; resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot.
 - `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
@@ -64,7 +64,9 @@ NotificationSetting → belongsTo → BabyActionType
 - `app/Livewire/Pages/` — Full-page Livewire components (registered via `Route::get('/uri', ComponentClass::class)`)
 - `resources/views/livewire/pages/` — Blade views for Livewire page components
 - `resources/views/layouts/app.blade.php` — Main app layout (MaryUI `x-mary-main`, sidebar, navbar)
-- `resources/js/app.js` — Minimal JS entry point (no notification logic — notifications are handled natively)
+- `resources/js/app.js` — JS entry point. No notification logic (notifications are handled natively), but it hosts the **datetime timezone helpers** described below: `utcToLocalInput`, `localInputToUtc`, and `formatLocalDateTime` (all on `window`).
+
+**Datetimes & timezones:** `started_at` / `finished_at` are stored as **true UTC instants** (`APP_TIMEZONE=UTC`). The webview is the only place that knows the device's local offset, so all conversion happens in the browser via the `app.js` helpers above: the `datetime-local` inputs use Alpine get/set accessors (`localInputToUtc` on input, `utcToLocalInput` for display), and the list renders times through `formatLocalDateTime`. This keeps the absolute timestamp handed to the OS alarm correct on non-UTC devices. `BabyAction\Create::mount()` seeds `started_at` with the current UTC wall-clock (`now()->format('Y-m-d\TH:i')`), which the form then shows in local time.
 
 The **BabyAction create/edit forms** pick Baby, Action Type, Food Type, and Breast Side via always-visible **segmented button groups** (wrapping `x-mary-button`s), not dropdowns — one tap to select, tap the selected one again to deselect to `null` (applies to every field, including the required ones). Each field has a `toggle*` action method (`toggleBaby`, `toggleActionType`, `toggleFoodType`, `toggleBreastSide`) used via `wire:click`; these assign the property directly, so they must call the relevant `updated*` hook themselves (e.g. `toggleActionType` → `updatedBabyActionTypeId`) to fire the clear cascades — direct assignment in an action does **not** trigger Livewire `updated*` hooks the way `wire:model`/`$set` does.
 
@@ -110,7 +112,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 **Flow:**
 1. `BabyActionObserver::created()` → calls `LocalNotificationScheduler::scheduleFor($action)`
 2. Scheduler loads **all enabled** `NotificationSetting` rules for the action type (none → schedules nothing; no lazy default creation).
-3. For each rule, skips silently if reference time is null or `fire_at` is already in the past.
+3. For each rule, skips silently only if the reference time is null. A rule whose `fire_at` is already in the past is **not** dropped — it fires immediately (`now()+1s`).
 4. Calculates `fire_at = reference_time + notify_after_minutes` per rule.
 5. For each eligible rule, calls `LocalNotifications::schedule([...])` with a unique key `action-{actionId}-setting-{ruleId}`, a Unix timestamp, the resolved title/body (the rule's `title` and `description` with placeholders applied; blank description → empty body), and `data.action_id`.
 6. If any were scheduled, sets `notification_scheduled_at = now()` and stores every scheduled key in `scheduled_notification_keys` on the `BabyAction`; otherwise nulls both.
@@ -118,7 +120,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 8. On delete: cancel every key in `scheduled_notification_keys` (robust against action-type change and rule deletion).
 9. On app boot (`NativeServiceProvider`): resyncs all `notification_scheduled_at IS NOT NULL` actions once per session (cached 5 min) to recover OS alarms cleared after device reboot.
 
-**Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips past/ineligible ones).
+**Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips only ineligible ones — null reference time — while past-due rules fire immediately).
 
 Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, required title, optional description, both with placeholders, enabled). A type can have multiple rules. Default rules (Eat: 180 min from start, "Time to eat!"; Sleep: 60 min from start, "Time to wake your baby up!") are seeded via migration.
 
