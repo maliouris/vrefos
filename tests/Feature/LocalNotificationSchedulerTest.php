@@ -530,6 +530,73 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertNull($action->refresh()->notification_scheduled_at);
     }
 
+    public function test_upcoming_for_returns_planned_reminder_with_true_fire_at(): void
+    {
+        $this->freezeTime();
+
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_after_minutes' => 180, 'title' => 'Time to eat!']);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+                'finished_at' => null,
+            ]);
+
+        $upcoming = $this->scheduler->upcomingFor($action);
+
+        $this->assertCount(1, $upcoming);
+        $this->assertSame('Time to eat!', $upcoming->first()['title']);
+        $this->assertTrue($upcoming->first()['fire_at']->isFuture());
+        $this->assertSame(
+            now()->subHour()->addMinutes(180)->timestamp,
+            $upcoming->first()['fire_at']->timestamp,
+        );
+    }
+
+    public function test_upcoming_for_keeps_past_fire_at_unclamped(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_after_minutes' => 1]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(2),
+                'finished_at' => null,
+            ]);
+
+        $upcoming = $this->scheduler->upcomingFor($action);
+
+        $this->assertCount(1, $upcoming);
+        $this->assertTrue($upcoming->first()['fire_at']->isPast());
+    }
+
+    public function test_upcoming_for_skips_specific_child_rule_for_other_baby(): void
+    {
+        $targetBaby = Baby::factory()->create();
+        $otherBaby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+
+        $rule = $this->settingFor($actionType, ['all_children' => false]);
+        $rule->babies()->attach($targetBaby);
+
+        $action = BabyAction::factory()
+            ->for($otherBaby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+                'finished_at' => null,
+            ]);
+
+        $this->assertCount(0, $this->scheduler->upcomingFor($action));
+    }
+
     /**
      * Run scheduleFor through a partial mock that captures the payloads handed
      * to the native plugin (the dispatchSchedule seam), so tests can assert the

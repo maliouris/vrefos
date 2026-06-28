@@ -8,49 +8,31 @@ use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
 use Carbon\Carbon;
 use Ikromjon\LocalNotifications\Facades\LocalNotifications;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class LocalNotificationScheduler
 {
     public function scheduleFor(BabyAction $action): bool
     {
-        $action->loadMissing(['baby', 'babyActionType']);
-
-        $rules = NotificationSetting::where('baby_action_type_id', $action->baby_action_type_id)
-            ->where('enabled', true)
-            ->with('babies:id')
-            ->get();
-
         $scheduledKeys = [];
 
-        foreach ($rules as $rule) {
-            if (! $rule->all_children && ! $rule->babies->pluck('id')->contains($action->baby_id)) {
-                continue;
-            }
-
-            $fireAt = $this->calculateFireAt($action, $rule);
-
-            if ($fireAt === null) {
-                continue;
-            }
+        foreach ($this->planFor($action) as $planned) {
+            $fireAt = $planned['fire_at'];
 
             if ($fireAt->isPast()) {
                 $fireAt = now()->addSeconds(1);
             }
 
-            $key = $this->notificationId($action, $rule);
-
-            $content = $this->resolveContent($action, $rule);
-
             $this->dispatchSchedule([
-                'id' => $key,
-                'title' => $content['title'],
-                'body' => $content['body'],
+                'id' => $planned['key'],
+                'title' => $planned['title'],
+                'body' => $planned['body'],
                 'at' => $fireAt->timestamp,
                 'data' => ['action_id' => $action->id],
             ]);
 
-            $scheduledKeys[] = $key;
+            $scheduledKeys[] = $planned['key'];
         }
 
         if ($scheduledKeys === []) {
@@ -66,6 +48,63 @@ class LocalNotificationScheduler
         $action->saveQuietly();
 
         return true;
+    }
+
+    /**
+     * The reminders that would be scheduled for an action, for display purposes.
+     *
+     * Unlike the keys persisted by {@see scheduleFor()}, each planned reminder
+     * keeps its true (un-clamped) `fire_at`, so a caller can tell upcoming
+     * reminders apart from overdue ones.
+     *
+     * @return Collection<int, array{key: string, rule: NotificationSetting, fire_at: Carbon, title: string, body: string}>
+     */
+    public function upcomingFor(BabyAction $action): Collection
+    {
+        return collect($this->planFor($action));
+    }
+
+    /**
+     * Resolve the eligible reminders for an action, keeping the true `fire_at`
+     * (not clamped to the future). Shared by {@see scheduleFor()} and
+     * {@see upcomingFor()} so eligibility and fire-time logic live in one place.
+     *
+     * @return array<int, array{key: string, rule: NotificationSetting, fire_at: Carbon, title: string, body: string}>
+     */
+    private function planFor(BabyAction $action): array
+    {
+        $action->loadMissing(['baby', 'babyActionType']);
+
+        $rules = NotificationSetting::where('baby_action_type_id', $action->baby_action_type_id)
+            ->where('enabled', true)
+            ->with('babies:id')
+            ->get();
+
+        $planned = [];
+
+        foreach ($rules as $rule) {
+            if (! $rule->all_children && ! $rule->babies->pluck('id')->contains($action->baby_id)) {
+                continue;
+            }
+
+            $fireAt = $this->calculateFireAt($action, $rule);
+
+            if ($fireAt === null) {
+                continue;
+            }
+
+            $content = $this->resolveContent($action, $rule);
+
+            $planned[] = [
+                'key' => $this->notificationId($action, $rule),
+                'rule' => $rule,
+                'fire_at' => $fireAt,
+                'title' => $content['title'],
+                'body' => $content['body'],
+            ];
+        }
+
+        return $planned;
     }
 
     public function cancelFor(BabyAction $action): void

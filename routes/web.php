@@ -6,10 +6,11 @@ use App\Livewire\Pages\Baby\Index as BabyIndex;
 use App\Livewire\Pages\BabyAction\Create as BabyActionCreate;
 use App\Livewire\Pages\BabyAction\Edit as BabyActionEdit;
 use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
+use App\Livewire\Pages\Dashboard\Index as Dashboard;
 use App\Livewire\Pages\NotificationSettings\Index;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => redirect('/babies'));
+Route::get('/', Dashboard::class)->name('dashboard');
 
 Route::get('/babies', BabyIndex::class)->name('babies.show');
 Route::get('/babies/add', BabyCreate::class)->name('babies.create');
