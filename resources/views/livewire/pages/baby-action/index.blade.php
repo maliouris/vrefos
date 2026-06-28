@@ -21,13 +21,21 @@
             $headers = [
                 ['key' => 'baby.name',           'label' => 'Baby'],
                 ['key' => 'babyActionType.name',  'label' => 'Type'],
-                ['key' => 'started_at',           'label' => 'Started At',  'format' => ['date', 'd/m/Y H:i']],
-                ['key' => 'finished_at',          'label' => 'Finished At', 'format' => ['date', 'd/m/Y H:i']],
+                ['key' => 'started_at',           'label' => 'Started At'],
+                ['key' => 'finished_at',          'label' => 'Finished At'],
                 ['key' => 'eatDetail.food_type',  'label' => 'Food Type'],
             ];
         @endphp
 
         <x-mary-table :headers="$headers" :rows="$babyActions">
+            @scope('cell_started_at', $action)
+                <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span>
+            @endscope
+
+            @scope('cell_finished_at', $action)
+                <span x-data x-text="window.formatLocalDateTime(@js(optional($action->finished_at)->format('Y-m-d H:i')))"></span>
+            @endscope
+
             @scope('cell_eatDetail.food_type', $action)
                 @if ($action->eatDetail?->food_type)
                     {{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}

@@ -27,6 +27,12 @@ class Create extends Component
 
     public ?string $breast_side = null;
 
+    public function mount(): void
+    {
+        // UTC wall-clock default; the form converts it to local time for display.
+        $this->started_at = now()->format('Y-m-d\TH:i');
+    }
+
     #[Computed]
     public function isEatAction(): bool
     {

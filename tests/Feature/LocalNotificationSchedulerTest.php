@@ -9,6 +9,7 @@ use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class LocalNotificationSchedulerTest extends TestCase
@@ -77,7 +78,7 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertNull($action->scheduled_notification_keys);
     }
 
-    public function test_schedule_for_with_fire_at_in_past_returns_false(): void
+    public function test_schedule_for_with_fire_at_in_past_fires_immediately(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
@@ -93,9 +94,10 @@ class LocalNotificationSchedulerTest extends TestCase
 
         $result = $this->scheduler->scheduleFor($action);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
         $action->refresh();
-        $this->assertNull($action->notification_scheduled_at);
+        $this->assertNotNull($action->notification_scheduled_at);
+        $this->assertCount(1, $action->scheduled_notification_keys);
     }
 
     public function test_schedule_for_with_disabled_setting_returns_false(): void
@@ -326,7 +328,7 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertEquals(["action-{$action->id}-setting-{$ruleB->id}"], $action->scheduled_notification_keys);
     }
 
-    public function test_reschedule_all_for_type_reschedules_future_and_drops_past(): void
+    public function test_reschedule_all_for_type_reschedules_future_and_past(): void
     {
         $baby = Baby::factory()->create();
         $actionType = BabyActionType::factory()->create();
@@ -340,7 +342,7 @@ class LocalNotificationSchedulerTest extends TestCase
                 'started_at' => now()->subHour(),
             ]);
 
-        // Past: started 4h ago → fires 1h ago → cannot be rescheduled.
+        // Past: started 4h ago → fires 1h ago → now fires immediately (2.B).
         $past = BabyAction::factory()
             ->for($baby)
             ->create([
@@ -350,8 +352,100 @@ class LocalNotificationSchedulerTest extends TestCase
 
         $count = $this->scheduler->rescheduleAllForType($actionType);
 
-        $this->assertEquals(1, $count);
+        $this->assertEquals(2, $count);
         $this->assertNotNull($future->refresh()->notification_scheduled_at);
-        $this->assertNull($past->refresh()->notification_scheduled_at);
+        $this->assertNotNull($past->refresh()->notification_scheduled_at);
+    }
+
+    public function test_future_rule_schedules_at_reference_plus_minutes(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_after_minutes' => 180]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subMinutes(10),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $result = $this->captureScheduled($action, $captured);
+
+        $this->assertTrue($result);
+        $this->assertCount(1, $captured);
+        $this->assertSame(
+            $action->started_at->copy()->addMinutes(180)->timestamp,
+            $captured[0]['at'],
+        );
+    }
+
+    public function test_past_due_rule_schedules_immediately(): void
+    {
+        $this->freezeTime();
+
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_after_minutes' => 60]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(2),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $result = $this->captureScheduled($action, $captured);
+
+        $this->assertTrue($result);
+        $this->assertCount(1, $captured);
+        $this->assertSame(now()->addSeconds(1)->timestamp, $captured[0]['at']);
+    }
+
+    public function test_null_reference_time_still_skips(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['notify_from' => NotifyFrom::FinishedAt]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHours(2),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $result = $this->captureScheduled($action, $captured);
+
+        $this->assertFalse($result);
+        $this->assertCount(0, $captured);
+        $this->assertNull($action->refresh()->notification_scheduled_at);
+    }
+
+    /**
+     * Run scheduleFor through a partial mock that captures the payloads handed
+     * to the native plugin (the dispatchSchedule seam), so tests can assert the
+     * exact `at` timestamp without a native runtime.
+     *
+     * @param  array<int, array<string, mixed>>  $captured
+     */
+    private function captureScheduled(BabyAction $action, array &$captured): bool
+    {
+        $scheduler = Mockery::mock(LocalNotificationScheduler::class)
+            ->makePartial()
+            ->shouldAllowMockingProtectedMethods();
+
+        $scheduler->shouldReceive('dispatchSchedule')
+            ->andReturnUsing(function (array $payload) use (&$captured): void {
+                $captured[] = $payload;
+            });
+
+        return $scheduler->scheduleFor($action);
     }
 }

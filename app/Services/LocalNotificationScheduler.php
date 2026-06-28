@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Ikromjon\LocalNotifications\Facades\LocalNotifications;
 use Illuminate\Support\Facades\DB;
 
-final class LocalNotificationScheduler
+class LocalNotificationScheduler
 {
     public function scheduleFor(BabyAction $action): bool
     {
@@ -25,23 +25,25 @@ final class LocalNotificationScheduler
         foreach ($rules as $rule) {
             $fireAt = $this->calculateFireAt($action, $rule);
 
-            if ($fireAt === null || $fireAt->isPast()) {
+            if ($fireAt === null) {
                 continue;
+            }
+
+            if ($fireAt->isPast()) {
+                $fireAt = now()->addSeconds(1);
             }
 
             $key = $this->notificationId($action, $rule);
 
-            if (function_exists('nativephp_call') && class_exists('Ikromjon\LocalNotifications\Facades\LocalNotifications')) {
-                $content = $this->resolveContent($action, $rule);
+            $content = $this->resolveContent($action, $rule);
 
-                LocalNotifications::schedule([
-                    'id' => $key,
-                    'title' => $content['title'],
-                    'body' => $content['body'],
-                    'at' => $fireAt->timestamp,
-                    'data' => ['action_id' => $action->id],
-                ]);
-            }
+            $this->dispatchSchedule([
+                'id' => $key,
+                'title' => $content['title'],
+                'body' => $content['body'],
+                'at' => $fireAt->timestamp,
+                'data' => ['action_id' => $action->id],
+            ]);
 
             $scheduledKeys[] = $key;
         }
@@ -65,10 +67,8 @@ final class LocalNotificationScheduler
     {
         $keys = $action->scheduled_notification_keys ?? [];
 
-        if (function_exists('nativephp_call') && class_exists('Ikromjon\LocalNotifications\Facades\LocalNotifications')) {
-            foreach ($keys as $key) {
-                LocalNotifications::cancel($key);
-            }
+        foreach ($keys as $key) {
+            $this->dispatchCancel($key);
         }
 
         $action->notification_scheduled_at = null;
@@ -113,6 +113,33 @@ final class LocalNotificationScheduler
         });
 
         return $rescheduled;
+    }
+
+    /**
+     * Hand a scheduled-notification payload to the native plugin.
+     *
+     * Guarded so it is a no-op on web/tests (no native runtime); extracted as a
+     * seam so tests can capture the payload without the native runtime present.
+     *
+     * @param  array{id: string, title: string, body: string, at: int, data: array{action_id: int}}  $payload
+     */
+    protected function dispatchSchedule(array $payload): void
+    {
+        if (function_exists('nativephp_call') && class_exists(LocalNotifications::class)) {
+            LocalNotifications::schedule($payload);
+        }
+    }
+
+    /**
+     * Cancel a scheduled notification by key via the native plugin.
+     *
+     * Guarded so it is a no-op on web/tests; extracted as a seam for testing.
+     */
+    protected function dispatchCancel(string $key): void
+    {
+        if (function_exists('nativephp_call') && class_exists(LocalNotifications::class)) {
+            LocalNotifications::cancel($key);
+        }
     }
 
     private function calculateFireAt(BabyAction $action, NotificationSetting $rule): ?Carbon

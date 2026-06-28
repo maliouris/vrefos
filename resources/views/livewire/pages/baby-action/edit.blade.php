@@ -67,8 +67,25 @@
                 @endif
             @endif
 
-            <x-mary-input label="Started At" wire:model="started_at" type="datetime-local" required />
-            <x-mary-input label="Finished At" wire:model="finished_at" type="datetime-local" />
+            <div x-data="{
+                    utc: @entangle('started_at'),
+                    get local() { return window.utcToLocalInput(this.utc) },
+                    set local(value) { this.utc = window.localInputToUtc(value) },
+                 }">
+                <label class="label"><span class="label-text">Started At</span></label>
+                <input type="datetime-local" x-model="local" required class="input input-bordered w-full" />
+                @error('started_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <div x-data="{
+                    utc: @entangle('finished_at'),
+                    get local() { return window.utcToLocalInput(this.utc) },
+                    set local(value) { this.utc = window.localInputToUtc(value) },
+                 }">
+                <label class="label"><span class="label-text">Finished At</span></label>
+                <input type="datetime-local" x-model="local" class="input input-bordered w-full" />
+                @error('finished_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            </div>
 
             <x-slot:actions>
                 <x-mary-button label="Back" link="{{ route('baby_actions.show') }}" class="btn-ghost" />
