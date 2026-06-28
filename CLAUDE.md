@@ -98,6 +98,7 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 
 | Method | URI | Name | Component |
 |--------|-----|-------|-----------|
+| GET | `/` | `dashboard` | `Pages\Dashboard\Index` |
 | GET | `/babies` | `babies.show` | `Pages\Baby\Index` |
 | GET | `/babies/add` | `babies.create` | `Pages\Baby\Create` |
 | GET | `/babies/{baby}/edit` | `babies.edit` | `Pages\Baby\Edit` |
@@ -107,7 +108,14 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | GET | `/notification-settings` | `notification-settings.edit` | `Pages\NotificationSettings\Index` |
 | GET | `/terms-and-conditions` | — | View `legal.terms-and-conditions` |
 
-Root `/` redirects to `/babies`.
+Root `/` is the **Dashboard** landing page (`Pages\Dashboard\Index`): per-baby cards showing the current
+in-progress activity (from actions with `finished_at IS NULL`) and the soonest upcoming reminder (derived
+from `LocalNotificationScheduler::upcomingFor()` — the earliest future reminder, falling back to the most
+recent overdue one), plus quick "New Action" / "Add Child" shortcuts. Each card header shows an **age badge**
+from the baby's `birth_date` via `ageLabel()`: days under one month (e.g. `26d`, or `newborn`), `N mo` under
+two years, then `Ny` / `Ny Nmo`; no badge when `birth_date` is null. `started_at`/`finished_at` are UTC;
+relative durations are computed server-side, absolute clock times rendered via `window.formatLocalDateTime`.
+The page uses `wire:poll.60s` to keep elapsed/"in N" labels fresh.
 
 ## Notification System
 
