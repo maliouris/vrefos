@@ -33,6 +33,9 @@
                                     {{ $rule->notify_after_minutes }} min from
                                     {{ $rule->notify_from === \App\Enums\NotifyFrom::FinishedAt ? 'end' : 'start' }}
                                 </div>
+                                <div class="text-sm opacity-70">
+                                    {{ $rule->all_children ? 'All children' : $rule->babies->pluck('name')->join(', ') }}
+                                </div>
                                 @if (filled($rule->description))
                                     <div class="text-sm opacity-70">{{ $rule->description }}</div>
                                 @endif
@@ -90,6 +93,25 @@
                     wire:model="description"
                     hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}"
                 />
+                <div>
+                    <label class="label"><span class="label-text">Children</span></label>
+                    <div class="flex flex-wrap gap-2">
+                        <x-mary-button
+                            label="All children"
+                            wire:click="toggleAllChildren"
+                            class="btn-sm {{ $allChildren ? 'btn-primary' : 'btn-outline' }}"
+                        />
+                        @foreach ($babies as $baby)
+                            <x-mary-button
+                                label="{{ $baby->name }}"
+                                wire:click="toggleBaby({{ $baby->id }})"
+                                class="btn-sm {{ in_array($baby->id, $targetBabyIds) ? 'btn-primary' : 'btn-outline' }}"
+                            />
+                        @endforeach
+                    </div>
+                    @error('targetBabyIds') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                </div>
+
                 <x-mary-toggle label="Enabled" wire:model="enabled" />
             </div>
 

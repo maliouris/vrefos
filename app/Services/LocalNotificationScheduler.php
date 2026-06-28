@@ -18,11 +18,16 @@ class LocalNotificationScheduler
 
         $rules = NotificationSetting::where('baby_action_type_id', $action->baby_action_type_id)
             ->where('enabled', true)
+            ->with('babies:id')
             ->get();
 
         $scheduledKeys = [];
 
         foreach ($rules as $rule) {
+            if (! $rule->all_children && ! $rule->babies->pluck('id')->contains($action->baby_id)) {
+                continue;
+            }
+
             $fireAt = $this->calculateFireAt($action, $rule);
 
             if ($fireAt === null) {

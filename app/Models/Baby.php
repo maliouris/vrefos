@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Baby extends Model
@@ -22,5 +23,10 @@ class Baby extends Model
     public function babyActions(): HasMany
     {
         return $this->hasMany(BabyAction::class);
+    }
+
+    public function notificationSettings(): BelongsToMany
+    {
+        return $this->belongsToMany(NotificationSetting::class);
     }
 }
