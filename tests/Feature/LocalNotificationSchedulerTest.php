@@ -169,6 +169,59 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertNotContains("action-{$action->id}-setting-{$disabledRule->id}", $action->scheduled_notification_keys);
     }
 
+    public function test_rule_targeting_specific_baby_only_schedules_for_that_baby(): void
+    {
+        $targetBaby = Baby::factory()->create();
+        $otherBaby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+
+        $rule = $this->settingFor($actionType, ['all_children' => false]);
+        $rule->babies()->attach($targetBaby->id);
+
+        $targetAction = BabyAction::factory()
+            ->for($targetBaby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+            ]);
+
+        $otherAction = BabyAction::factory()
+            ->for($otherBaby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+            ]);
+
+        $this->assertNotNull($targetAction->fresh()->notification_scheduled_at);
+        $this->assertNull($otherAction->fresh()->notification_scheduled_at);
+    }
+
+    public function test_all_children_rule_schedules_for_every_baby(): void
+    {
+        $babyA = Baby::factory()->create();
+        $babyB = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+
+        $this->settingFor($actionType, ['all_children' => true]);
+
+        $actionA = BabyAction::factory()
+            ->for($babyA)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+            ]);
+
+        $actionB = BabyAction::factory()
+            ->for($babyB)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subHour(),
+            ]);
+
+        $this->assertNotNull($actionA->fresh()->notification_scheduled_at);
+        $this->assertNotNull($actionB->fresh()->notification_scheduled_at);
+    }
+
     public function test_cancel_for_clears_all_stored_keys(): void
     {
         $baby = Baby::factory()->create();

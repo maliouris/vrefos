@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\NotificationSettings;
 
 use App\Enums\NotifyFrom;
+use App\Models\Baby;
 use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
@@ -29,6 +30,11 @@ class Index extends Component
 
     public bool $enabled = true;
 
+    public bool $allChildren = true;
+
+    /** @var array<int, int> */
+    public array $targetBabyIds = [];
+
     public function openCreate(int $typeId): void
     {
         $this->resetForm();
@@ -48,7 +54,27 @@ class Index extends Component
         $this->title = $setting->title;
         $this->description = $setting->description;
         $this->enabled = $setting->enabled;
+        $this->allChildren = $setting->all_children;
+        $this->targetBabyIds = $setting->all_children ? [] : $setting->babies->pluck('id')->all();
         $this->showModal = true;
+    }
+
+    public function toggleAllChildren(): void
+    {
+        $this->allChildren = true;
+        $this->targetBabyIds = [];
+    }
+
+    public function toggleBaby(int $babyId): void
+    {
+        if (in_array($babyId, $this->targetBabyIds, true)) {
+            $this->targetBabyIds = array_values(array_diff($this->targetBabyIds, [$babyId]));
+        } else {
+            $this->targetBabyIds[] = $babyId;
+        }
+
+        // An empty selection means "all children"; otherwise targeting is specific.
+        $this->allChildren = $this->targetBabyIds === [];
     }
 
     public function saveRule(LocalNotificationScheduler $scheduler): void
@@ -60,6 +86,9 @@ class Index extends Component
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:255',
             'enabled' => 'boolean',
+            'allChildren' => 'boolean',
+            'targetBabyIds' => [Rule::requiredIf(! $this->allChildren), 'array'],
+            'targetBabyIds.*' => 'exists:babies,id',
         ]);
 
         $type = BabyActionType::findOrFail($this->ruleTypeId);
@@ -70,13 +99,18 @@ class Index extends Component
             'notify_from' => $this->notifyFrom,
             'title' => $this->title,
             'description' => $this->description,
+            'all_children' => $this->allChildren,
         ];
 
         if ($this->editingId !== null) {
-            NotificationSetting::findOrFail($this->editingId)->update($attributes);
+            $setting = NotificationSetting::findOrFail($this->editingId);
+            $setting->update($attributes);
         } else {
-            NotificationSetting::create($attributes + ['baby_action_type_id' => $type->id]);
+            $setting = NotificationSetting::create($attributes + ['baby_action_type_id' => $type->id]);
         }
+
+        $babyIds = $this->allChildren ? Baby::pluck('id')->all() : $this->targetBabyIds;
+        $setting->babies()->sync($babyIds);
 
         $scheduler->rescheduleAllForType($type);
 
@@ -115,12 +149,15 @@ class Index extends Component
         $this->title = '';
         $this->description = null;
         $this->enabled = true;
+        $this->allChildren = true;
+        $this->targetBabyIds = [];
     }
 
     public function render()
     {
         return view('livewire.pages.notification-settings.index', [
-            'actionTypes' => BabyActionType::with('notificationSettings')->orderBy('name')->get(),
+            'actionTypes' => BabyActionType::with('notificationSettings.babies:id,name')->orderBy('name')->get(),
+            'babies' => Baby::orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

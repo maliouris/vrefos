@@ -128,6 +128,87 @@ class NotificationSettingsTest extends TestCase
         $this->assertContains("action-{$action->id}-setting-{$ruleKeep->id}", $keys);
     }
 
+    public function test_save_rule_with_all_children_attaches_every_baby(): void
+    {
+        $babyA = Baby::factory()->create();
+        $babyB = Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->assertSet('allChildren', true)
+            ->call('saveRule')
+            ->assertHasNoErrors();
+
+        $rule = NotificationSetting::where('baby_action_type_id', $type->id)->firstOrFail();
+        $this->assertTrue($rule->all_children);
+        $this->assertEqualsCanonicalizing(
+            [$babyA->id, $babyB->id],
+            $rule->babies()->pluck('babies.id')->all(),
+        );
+    }
+
+    public function test_save_rule_with_specific_babies_attaches_only_those(): void
+    {
+        $babyA = Baby::factory()->create();
+        $babyB = Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->call('toggleBaby', $babyA->id)
+            ->assertSet('allChildren', false)
+            ->call('saveRule')
+            ->assertHasNoErrors();
+
+        $rule = NotificationSetting::where('baby_action_type_id', $type->id)->firstOrFail();
+        $this->assertFalse($rule->all_children);
+        $this->assertEquals([$babyA->id], $rule->babies()->pluck('babies.id')->all());
+    }
+
+    public function test_open_edit_rehydrates_targeting(): void
+    {
+        $babyA = Baby::factory()->create();
+        Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type, ['all_children' => false]);
+        $rule->babies()->attach($babyA->id);
+
+        Livewire::test(Index::class)
+            ->call('openEdit', $rule->id)
+            ->assertSet('allChildren', false)
+            ->assertSet('targetBabyIds', [$babyA->id]);
+    }
+
+    public function test_toggle_baby_clears_all_and_clearing_last_reverts_to_all(): void
+    {
+        $baby = Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->assertSet('allChildren', true)
+            ->call('toggleBaby', $baby->id)
+            ->assertSet('allChildren', false)
+            ->assertSet('targetBabyIds', [$baby->id])
+            ->call('toggleBaby', $baby->id)
+            ->assertSet('allChildren', true)
+            ->assertSet('targetBabyIds', []);
+    }
+
+    public function test_specific_targeting_requires_at_least_one_baby(): void
+    {
+        Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->set('allChildren', false)
+            ->set('targetBabyIds', [])
+            ->call('saveRule')
+            ->assertHasErrors('targetBabyIds');
+    }
+
     public function test_notify_after_minutes_must_be_within_bounds(): void
     {
         $type = BabyActionType::factory()->create(['name' => 'Eat']);
