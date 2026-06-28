@@ -40,6 +40,7 @@ npm ...                                     # Run any npm command
 - `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting` (no `User` model — the app is single-user)
 - `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls go through the `dispatchSchedule()` / `dispatchCancel()` seams, guarded with `function_exists('nativephp_call')` for web/test compatibility (the seams also let tests capture the exact scheduled payload without a native runtime).
 - `app/Observers/BabyActionObserver.php` — Triggers the scheduler on `created`, `updated` (time/type fields), and `deleted` events.
+- `app/Observers/BabyObserver.php` — On baby `created`, attaches the new baby to every `all_children` notification rule (so "all children" stays dynamic as babies are added). Both observers are registered in `AppServiceProvider::boot()`.
 - `app/Providers/NativeServiceProvider.php` — Requests notification permission on boot; resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot.
 - `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
 - `app/Enums/BreastSide.php` — `left` / `right`
@@ -51,13 +52,16 @@ npm ...                                     # Run any npm command
 Baby → hasMany → BabyAction → belongsTo → BabyActionType
                  BabyAction → hasOne    → BabyActionEatDetail
 NotificationSetting → belongsTo → BabyActionType
+Baby ←→ belongsToMany ←→ NotificationSetting   (pivot: baby_notification_setting)
 ```
 
 `BabyAction` fields: `baby_id`, `baby_action_type_id`, `started_at`, `finished_at`, `notification_scheduled_at` (nullable datetime — set when at least one OS notification is scheduled, null otherwise), `scheduled_notification_keys` (nullable, cast to `array` — the exact OS notification keys scheduled for this action, e.g. `["action-12-setting-3"]`, so they can be cancelled even after an action-type change or rule deletion)
 
 `BabyActionEatDetail` fields: `baby_action_id`, `food_type` (nullable, cast to `FoodType` enum), `breast_side` (nullable, cast to `BreastSide` enum). One-to-one with `BabyAction`; cascade-deleted with parent. Only created when action type is "Eat" and a food type is selected.
 
-`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`), `title` (string, **required** — the notification title), `description` (nullable string — optional notification body; blank → empty body). Each row is **one rule**; a type can have **many** rules (no unique constraint). Default rules are seeded by migrations, not created lazily. Both `title` and `description` support placeholders substituted when the notification is built: `#{minutes}` (the rule's delay), `#{action}` (action type name, lowercased), `#{baby}` (baby's name).
+`NotificationSetting` fields: `baby_action_type_id`, `all_children` (bool, default true), `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`), `title` (string, **required** — the notification title), `description` (nullable string — optional notification body; blank → empty body). Each row is **one rule**; a type can have **many** rules (no unique constraint). Default rules are seeded by migrations, not created lazily. Both `title` and `description` support placeholders substituted when the notification is built: `#{minutes}` (the rule's delay), `#{action}` (action type name, lowercased), `#{baby}` (baby's name).
+
+**Child targeting:** a rule targets either **all children** or a **specific subset**. `all_children` (boolean) is the authoritative intent flag; the `baby_notification_setting` pivot holds the concrete targeted babies. When `all_children` is true the pivot still holds *every* baby and is kept in sync — `BabyObserver` attaches newly created babies to all-children rules, and the pivot's `baby_id` FK is `onDelete('cascade')` so removing a baby drops its rows. An empty specific selection is invalid (the UI treats "no babies" as "all"). The scheduler skips a rule when `! $rule->all_children` and the action's `baby_id` is not in the pivot.
 
 ### Frontend
 
@@ -111,8 +115,8 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 
 **Flow:**
 1. `BabyActionObserver::created()` → calls `LocalNotificationScheduler::scheduleFor($action)`
-2. Scheduler loads **all enabled** `NotificationSetting` rules for the action type (none → schedules nothing; no lazy default creation).
-3. For each rule, skips silently only if the reference time is null. A rule whose `fire_at` is already in the past is **not** dropped — it fires immediately (`now()+1s`).
+2. Scheduler loads **all enabled** `NotificationSetting` rules for the action type (with their `babies`; none → schedules nothing; no lazy default creation).
+3. For each rule, skips it if the rule targets specific children and the action's baby isn't among them (`! $rule->all_children && ! $rule->babies->contains($action->baby_id)`), or silently if the reference time is null. A rule whose `fire_at` is already in the past is **not** dropped — it fires immediately (`now()+1s`).
 4. Calculates `fire_at = reference_time + notify_after_minutes` per rule.
 5. For each eligible rule, calls `LocalNotifications::schedule([...])` with a unique key `action-{actionId}-setting-{ruleId}`, a Unix timestamp, the resolved title/body (the rule's `title` and `description` with placeholders applied; blank description → empty body), and `data.action_id`.
 6. If any were scheduled, sets `notification_scheduled_at = now()` and stores every scheduled key in `scheduled_notification_keys` on the `BabyAction`; otherwise nulls both.
@@ -122,7 +126,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 
 **Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips only ineligible ones — null reference time — while past-due rules fire immediately).
 
-Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, required title, optional description, both with placeholders, enabled). A type can have multiple rules. Default rules (Eat: 180 min from start, "Time to eat!"; Sleep: 60 min from start, "Time to wake your baby up!") are seeded via migration.
+Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, required title, optional description, both with placeholders, enabled, and a **child selector**). The child selector is an always-visible segmented button group (`toggleAllChildren` / `toggleBaby` actions) with an "All children" button plus one per baby: selecting a child clears "All", and clearing the last child reverts to "All". The rule list shows each rule's target ("All children" or the comma-joined names). A type can have multiple rules. Default rules (Eat: 180 min from start, "Time to eat!"; Sleep: 60 min from start, "Time to wake your baby up!") are seeded via migration.
 
 ## Testing
 
