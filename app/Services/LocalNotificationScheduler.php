@@ -156,22 +156,18 @@ class LocalNotificationScheduler
     }
 
     /**
-     * Resolve the notification title and body for a rule, applying the rule's
-     * custom message (with placeholders) or falling back to the default text.
+     * Resolve the notification title and body for a rule. The title is required;
+     * the description is optional. Placeholders are applied to both.
      *
      * @return array{title: string, body: string}
      */
     private function resolveContent(BabyAction $action, NotificationSetting $rule): array
     {
-        $actionTypeName = strtolower($action->babyActionType->name);
-
-        $body = blank($rule->message)
-            ? 'Your baby needs '.$actionTypeName.'.'
-            : $this->applyPlaceholders($rule->message, $action, $rule);
-
         return [
-            'title' => 'Time to '.$actionTypeName.'!',
-            'body' => $body,
+            'title' => $this->applyPlaceholders($rule->title, $action, $rule),
+            'body' => blank($rule->description)
+                ? ''
+                : $this->applyPlaceholders($rule->description, $action, $rule),
         ];
     }
 

@@ -23,7 +23,9 @@ class Index extends Component
 
     public string $notifyFrom = 'started_at';
 
-    public ?string $message = null;
+    public string $title = '';
+
+    public ?string $description = null;
 
     public bool $enabled = true;
 
@@ -31,6 +33,7 @@ class Index extends Component
     {
         $this->resetForm();
         $this->ruleTypeId = $typeId;
+        $this->title = 'Time to '.strtolower(BabyActionType::findOrFail($typeId)->name).'!';
         $this->showModal = true;
     }
 
@@ -42,7 +45,8 @@ class Index extends Component
         $this->ruleTypeId = $setting->baby_action_type_id;
         $this->notifyAfterMinutes = $setting->notify_after_minutes;
         $this->notifyFrom = $setting->notify_from->value;
-        $this->message = $setting->message;
+        $this->title = $setting->title;
+        $this->description = $setting->description;
         $this->enabled = $setting->enabled;
         $this->showModal = true;
     }
@@ -53,7 +57,8 @@ class Index extends Component
             'ruleTypeId' => ['required', 'exists:baby_action_types,id'],
             'notifyAfterMinutes' => 'required|integer|min:1|max:10080',
             'notifyFrom' => ['required', Rule::enum(NotifyFrom::class)],
-            'message' => 'nullable|string|max:255',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
             'enabled' => 'boolean',
         ]);
 
@@ -63,7 +68,8 @@ class Index extends Component
             'enabled' => $this->enabled,
             'notify_after_minutes' => $this->notifyAfterMinutes,
             'notify_from' => $this->notifyFrom,
-            'message' => $this->message,
+            'title' => $this->title,
+            'description' => $this->description,
         ];
 
         if ($this->editingId !== null) {
@@ -106,7 +112,8 @@ class Index extends Component
         $this->ruleTypeId = null;
         $this->notifyAfterMinutes = 180;
         $this->notifyFrom = 'started_at';
-        $this->message = null;
+        $this->title = '';
+        $this->description = null;
         $this->enabled = true;
     }
 

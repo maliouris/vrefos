@@ -31,6 +31,7 @@ class LocalNotificationSchedulerTest extends TestCase
             'enabled' => true,
             'notify_after_minutes' => 180,
             'notify_from' => NotifyFrom::StartedAt,
+            'title' => 'Time to check on your baby!',
         ], $overrides));
     }
 
@@ -380,6 +381,54 @@ class LocalNotificationSchedulerTest extends TestCase
             $action->started_at->copy()->addMinutes(180)->timestamp,
             $captured[0]['at'],
         );
+    }
+
+    public function test_payload_title_and_body_come_from_the_rule_with_placeholders(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Lily']);
+        $actionType = BabyActionType::factory()->create(['name' => 'Eat']);
+        $this->settingFor($actionType, [
+            'notify_after_minutes' => 120,
+            'title' => '#{baby}, time to #{action}!',
+            'description' => 'Due in #{minutes} min',
+        ]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subMinutes(10),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $this->captureScheduled($action, $captured);
+
+        $this->assertCount(1, $captured);
+        $this->assertSame('Lily, time to eat!', $captured[0]['title']);
+        $this->assertSame('Due in 120 min', $captured[0]['body']);
+    }
+
+    public function test_blank_description_yields_empty_body(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['title' => 'Heads up!', 'description' => null]);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subMinutes(10),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $this->captureScheduled($action, $captured);
+
+        $this->assertCount(1, $captured);
+        $this->assertSame('Heads up!', $captured[0]['title']);
+        $this->assertSame('', $captured[0]['body']);
     }
 
     public function test_past_due_rule_schedules_immediately(): void

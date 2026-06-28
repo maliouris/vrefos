@@ -22,6 +22,7 @@ class NotificationSettingFactory extends Factory
             'enabled' => true,
             'notify_after_minutes' => 180,
             'notify_from' => NotifyFrom::StartedAt,
+            'title' => 'Time to check on your baby!',
         ];
     }
 }

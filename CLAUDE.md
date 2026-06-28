@@ -57,7 +57,7 @@ NotificationSetting → belongsTo → BabyActionType
 
 `BabyActionEatDetail` fields: `baby_action_id`, `food_type` (nullable, cast to `FoodType` enum), `breast_side` (nullable, cast to `BreastSide` enum). One-to-one with `BabyAction`; cascade-deleted with parent. Only created when action type is "Eat" and a food type is selected.
 
-`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`), `message` (nullable string — optional custom notification body; blank falls back to default text). Each row is **one rule**; a type can have **many** rules (no unique constraint). Default rules are seeded by migrations, not created lazily. Messages support placeholders substituted when the notification is built: `#{minutes}` (the rule's delay), `#{action}` (action type name, lowercased), `#{baby}` (baby's name).
+`NotificationSetting` fields: `baby_action_type_id`, `enabled` (bool, default true), `notify_after_minutes` (int, default 180), `notify_from` (cast to `NotifyFrom` enum, default `StartedAt`), `title` (string, **required** — the notification title), `description` (nullable string — optional notification body; blank → empty body). Each row is **one rule**; a type can have **many** rules (no unique constraint). Default rules are seeded by migrations, not created lazily. Both `title` and `description` support placeholders substituted when the notification is built: `#{minutes}` (the rule's delay), `#{action}` (action type name, lowercased), `#{baby}` (baby's name).
 
 ### Frontend
 
@@ -112,7 +112,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 2. Scheduler loads **all enabled** `NotificationSetting` rules for the action type (none → schedules nothing; no lazy default creation).
 3. For each rule, skips silently if reference time is null or `fire_at` is already in the past.
 4. Calculates `fire_at = reference_time + notify_after_minutes` per rule.
-5. For each eligible rule, calls `LocalNotifications::schedule([...])` with a unique key `action-{actionId}-setting-{ruleId}`, a Unix timestamp, the resolved title/body (default text or the rule's `message` with placeholders applied), and `data.action_id`.
+5. For each eligible rule, calls `LocalNotifications::schedule([...])` with a unique key `action-{actionId}-setting-{ruleId}`, a Unix timestamp, the resolved title/body (the rule's `title` and `description` with placeholders applied; blank description → empty body), and `data.action_id`.
 6. If any were scheduled, sets `notification_scheduled_at = now()` and stores every scheduled key in `scheduled_notification_keys` on the `BabyAction`; otherwise nulls both.
 7. On update: if `started_at`, `finished_at`, or `baby_action_type_id` changed → reschedule (cancel + re-schedule).
 8. On delete: cancel every key in `scheduled_notification_keys` (robust against action-type change and rule deletion).
@@ -120,7 +120,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 
 **Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips past/ineligible ones).
 
-Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, optional custom message with placeholders, enabled). A type can have multiple rules. Default rules (Eat: 180 min from start; Sleep: 60 min from start with a wake-up message) are seeded via migration.
+Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, required title, optional description, both with placeholders, enabled). A type can have multiple rules. Default rules (Eat: 180 min from start, "Time to eat!"; Sleep: 60 min from start, "Time to wake your baby up!") are seeded via migration.
 
 ## Testing
 

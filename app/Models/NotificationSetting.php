@@ -11,7 +11,7 @@ class NotificationSetting extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['baby_action_type_id', 'enabled', 'notify_after_minutes', 'notify_from', 'message'];
+    protected $fillable = ['baby_action_type_id', 'enabled', 'notify_after_minutes', 'notify_from', 'title', 'description'];
 
     protected $casts = [
         'enabled' => 'boolean',

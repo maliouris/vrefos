@@ -28,12 +28,13 @@
                                 :checked="$rule->enabled"
                             />
                             <div>
-                                <div class="font-medium">
+                                <div class="font-medium">{{ $rule->title }}</div>
+                                <div class="text-sm opacity-70">
                                     {{ $rule->notify_after_minutes }} min from
                                     {{ $rule->notify_from === \App\Enums\NotifyFrom::FinishedAt ? 'end' : 'start' }}
                                 </div>
-                                @if (filled($rule->message))
-                                    <div class="text-sm opacity-70">{{ $rule->message }}</div>
+                                @if (filled($rule->description))
+                                    <div class="text-sm opacity-70">{{ $rule->description }}</div>
                                 @endif
                             </div>
                         </div>
@@ -80,8 +81,13 @@
                     option-label="name"
                 />
                 <x-mary-input
-                    label="Message (optional)"
-                    wire:model="message"
+                    label="Title"
+                    wire:model="title"
+                    hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}"
+                />
+                <x-mary-input
+                    label="Description (optional)"
+                    wire:model="description"
                     hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}"
                 />
                 <x-mary-toggle label="Enabled" wire:model="enabled" />

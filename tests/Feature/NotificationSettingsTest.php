@@ -25,6 +25,7 @@ class NotificationSettingsTest extends TestCase
             'enabled' => true,
             'notify_after_minutes' => 180,
             'notify_from' => NotifyFrom::StartedAt,
+            'title' => 'Time to check on your baby!',
         ], $overrides));
     }
 
@@ -138,28 +139,66 @@ class NotificationSettingsTest extends TestCase
             ->assertHasErrors('notifyAfterMinutes');
     }
 
-    public function test_blank_message_falls_back_to_default_text(): void
+    public function test_blank_description_yields_empty_body(): void
     {
         $baby = Baby::factory()->create(['name' => 'Lily']);
         $type = BabyActionType::factory()->create(['name' => 'Eat']);
-        $rule = $this->ruleFor($type, ['message' => null]);
+        $rule = $this->ruleFor($type, ['description' => null]);
 
         $action = $this->pendingActionFor($type, $baby);
 
-        $this->assertEquals('Your baby needs eat.', $this->resolveBody($action, $rule));
+        $this->assertSame('', $this->resolveBody($action, $rule));
     }
 
-    public function test_message_placeholders_are_substituted(): void
+    public function test_description_placeholders_are_substituted(): void
     {
         $baby = Baby::factory()->create(['name' => 'Lily']);
         $type = BabyActionType::factory()->create(['name' => 'Eat']);
         $rule = $this->ruleFor($type, [
             'notify_after_minutes' => 120,
-            'message' => '#{baby} needs #{action} in #{minutes} min',
+            'description' => '#{baby} needs #{action} in #{minutes} min',
         ]);
 
         $action = $this->pendingActionFor($type, $baby);
 
         $this->assertEquals('Lily needs eat in 120 min', $this->resolveBody($action, $rule));
+    }
+
+    public function test_open_create_prefills_title_from_type(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->assertSet('title', 'Time to eat!');
+    }
+
+    public function test_title_is_required(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->set('title', '')
+            ->call('saveRule')
+            ->assertHasErrors('title');
+    }
+
+    public function test_save_rule_persists_title_and_description(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->call('openCreate', $type->id)
+            ->set('title', 'Feed me')
+            ->set('description', 'Right now please')
+            ->call('saveRule')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('notification_settings', [
+            'baby_action_type_id' => $type->id,
+            'title' => 'Feed me',
+            'description' => 'Right now please',
+        ]);
     }
 }
