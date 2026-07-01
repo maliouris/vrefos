@@ -1,4 +1,4 @@
-# Brefos
+# Vrefos
 
 A Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.) and receive local notifications when it's time for the next session.
 
