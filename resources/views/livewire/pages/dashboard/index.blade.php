@@ -41,7 +41,7 @@
         <div class="grid gap-4 sm:grid-cols-2">
             @foreach ($cards as $card)
                 @php($baby = $card['baby'])
-                <x-mary-card class="shadow-sm">
+                <x-mary-card class="shadow-sm min-w-0" wire:key="baby-card-{{ $baby->id }}">
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-lg font-semibold">{{ $baby->name }}</h2>
                         @if ($card['age'])
@@ -49,47 +49,37 @@
                         @endif
                     </div>
 
-                    {{-- NOW --}}
-                    @forelse ($card['ongoing'] as $action)
-                        <div class="flex items-center justify-between gap-2 mb-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="text-primary shrink-0" />
-                                <span class="truncate">
-                                    <span class="font-medium">{{ $action->babyActionType?->name }}</span>
-                                    <span class="text-base-content/60">· {{ $humanDiff($action->started_at) }}</span>
-                                </span>
-                            </div>
-                            <x-mary-button
-                                label="Finish now"
-                                icon="o-flag"
-                                class="btn-ghost btn-xs shrink-0"
-                                wire:click="finishNow({{ $action->id }})"
-                                wire:confirm="Mark this action as finished now?"
-                            />
-                        </div>
-                    @empty
-                        <div class="flex items-center gap-2 mb-2 text-base-content/60">
-                            <x-mary-icon name="o-minus-circle" class="shrink-0" />
-                            <span>No active activity</span>
-                        </div>
-                    @endforelse
-
-                    {{-- NEXT UP --}}
-                    <div class="flex items-center gap-2 pt-2 mt-1 border-t border-base-200">
-                        <x-mary-icon name="o-bell" class="shrink-0 {{ $card['next'] && $card['next']['overdue'] ? 'text-error' : 'text-base-content/60' }}" />
-                        @if ($card['next'])
-                            <span class="min-w-0 truncate">
-                                <span class="font-medium">{{ $card['next']['title'] }}</span>
-                                @if ($card['next']['overdue'])
-                                    <span class="badge badge-error badge-sm ml-1">Overdue</span>
-                                @else
-                                    <span class="text-base-content/60">· in {{ $humanDiff($card['next']['fire_at']) }}</span>
+                    {{-- LATEST ACTIONS --}}
+                    <div class="overflow-x-auto">
+                        @forelse ($card['actions'] as $action)
+                            <div class="flex items-center justify-between gap-2 mb-2" wire:key="action-{{ $action->id }}">
+                                <div class="flex items-center gap-2">
+                                    <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
+                                    <span class="whitespace-nowrap">
+                                        <span class="font-medium">{{ $action->babyActionType?->name }}</span>
+                                        @if ($action->finished_at === null)
+                                            <span class="text-base-content/60">· {{ $humanDiff($action->started_at) }}</span>
+                                        @else
+                                            <span class="text-base-content/60">· ended {{ $humanDiff($action->finished_at) }} ago</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                @if ($action->finished_at === null)
+                                    <x-mary-button
+                                        label="Finish now"
+                                        icon="o-flag"
+                                        class="btn-ghost btn-xs shrink-0"
+                                        wire:click="finishNow({{ $action->id }})"
+                                        wire:confirm="Mark this action as finished now?"
+                                    />
                                 @endif
-                                <span class="text-base-content/60" x-data x-text="'(' + window.formatLocalDateTime(@js($card['next']['fire_at']->format('Y-m-d H:i'))) + ')'"></span>
-                            </span>
-                        @else
-                            <span class="text-base-content/60">No reminders scheduled</span>
-                        @endif
+                            </div>
+                        @empty
+                            <div class="flex items-center gap-2 mb-2 text-base-content/60">
+                                <x-mary-icon name="o-minus-circle" class="shrink-0" />
+                                <span>No actions yet</span>
+                            </div>
+                        @endforelse
                     </div>
                 </x-mary-card>
             @endforeach

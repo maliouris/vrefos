@@ -20,7 +20,7 @@ class DashboardTest extends TestCase
     {
         Livewire::test(Index::class)
             ->assertSee('No children added yet')
-            ->assertDontSee('No active activity');
+            ->assertDontSee('No actions yet');
     }
 
     public function test_shows_ongoing_action_for_a_baby(): void
@@ -37,13 +37,14 @@ class DashboardTest extends TestCase
         Livewire::test(Index::class)
             ->assertSee('Emma')
             ->assertSee('Sleep')
-            ->assertDontSee('No active activity');
+            ->assertSee('Finish now')
+            ->assertDontSee('No actions yet');
     }
 
-    public function test_shows_no_active_activity_when_all_actions_finished(): void
+    public function test_shows_finished_action_without_finish_button(): void
     {
         $baby = Baby::factory()->create();
-        $type = BabyActionType::factory()->create();
+        $type = BabyActionType::factory()->create(['name' => 'Sleep']);
 
         BabyAction::factory()->for($baby)->create([
             'baby_action_type_id' => $type->id,
@@ -52,10 +53,42 @@ class DashboardTest extends TestCase
         ]);
 
         Livewire::test(Index::class)
-            ->assertSee('No active activity');
+            ->assertSee('Sleep')
+            ->assertSee('ended')
+            ->assertDontSee('Finish now')
+            ->assertDontSee('No actions yet');
     }
 
-    public function test_shows_next_reminder_for_a_baby(): void
+    public function test_shows_empty_actions_state_when_baby_has_no_actions(): void
+    {
+        Baby::factory()->create();
+
+        Livewire::test(Index::class)
+            ->assertSee('No actions yet');
+    }
+
+    public function test_shows_only_latest_three_actions(): void
+    {
+        $baby = Baby::factory()->create();
+
+        foreach (['Oldest', 'Third', 'Second', 'Newest'] as $index => $name) {
+            $type = BabyActionType::factory()->create(['name' => $name]);
+
+            BabyAction::factory()->for($baby)->create([
+                'baby_action_type_id' => $type->id,
+                'started_at' => now()->subHours(10 - $index),
+                'finished_at' => null,
+            ]);
+        }
+
+        Livewire::test(Index::class)
+            ->assertSee('Newest')
+            ->assertSee('Second')
+            ->assertSee('Third')
+            ->assertDontSee('Oldest');
+    }
+
+    public function test_does_not_show_reminders(): void
     {
         $baby = Baby::factory()->create();
         $type = BabyActionType::factory()->create();
@@ -75,7 +108,7 @@ class DashboardTest extends TestCase
         ]);
 
         Livewire::test(Index::class)
-            ->assertSee('Time to eat!')
+            ->assertDontSee('Time to eat!')
             ->assertDontSee('No reminders scheduled');
     }
 

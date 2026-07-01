@@ -108,14 +108,15 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 | GET | `/notification-settings` | `notification-settings.edit` | `Pages\NotificationSettings\Index` |
 | GET | `/terms-and-conditions` | — | View `legal.terms-and-conditions` |
 
-Root `/` is the **Dashboard** landing page (`Pages\Dashboard\Index`): per-baby cards showing the current
-in-progress activity (from actions with `finished_at IS NULL`) and the soonest upcoming reminder (derived
-from `LocalNotificationScheduler::upcomingFor()` — the earliest future reminder, falling back to the most
-recent overdue one), plus quick "New Action" / "Add Child" shortcuts. Each card header shows an **age badge**
-from the baby's `birth_date` via `ageLabel()`: days under one month (e.g. `26d`, or `newborn`), `N mo` under
-two years, then `Ny` / `Ny Nmo`; no badge when `birth_date` is null. `started_at`/`finished_at` are UTC;
-relative durations are computed server-side, absolute clock times rendered via `window.formatLocalDateTime`.
-The page uses `wire:poll.60s` to keep elapsed/"in N" labels fresh.
+Root `/` is the **Dashboard** landing page (`Pages\Dashboard\Index`): per-baby cards showing the **latest 3
+actions** of any status (newest first by `started_at`, per-parent `limit(3)` on the eager load). Ongoing rows
+(`finished_at IS NULL`) show elapsed time and a "Finish now" button; finished rows show when they ended, no
+button. No reminder/notification info is shown on the dashboard. Quick "New Action" / "Add Child" shortcuts
+sit above the cards. Each card header shows an **age badge** from the baby's `birth_date` via `ageLabel()`:
+days under one month (e.g. `26d`, or `newborn`), `N mo` under two years, then `Ny` / `Ny Nmo`; no badge when
+`birth_date` is null. Cards are `min-w-0` grid items and the action list is wrapped in `overflow-x-auto` with
+`whitespace-nowrap` rows, so long content scrolls inside the card instead of widening the window. The page
+uses `wire:poll.60s` to keep elapsed labels fresh.
 
 ## Notification System
 
