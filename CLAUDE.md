@@ -1,8 +1,8 @@
-# Brefos — CLAUDE.md
+# Vrefos — CLAUDE.md
 
 ## Project Overview
 
-Brefos is a Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.). It delivers on-device local notifications reminding parents when it's time for the next feeding or sleep session.
+Vrefos is a Laravel 13 + NativePHP Mobile app for parents to track toddler/baby activities (feeding, sleeping, etc.). It delivers on-device local notifications reminding parents when it's time for the next feeding or sleep session.
 
 It is a **single-user, on-device app** — there is no authentication, no `User` model, and no remote server. All data lives in on-device SQLite.
 
