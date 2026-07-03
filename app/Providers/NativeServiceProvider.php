@@ -4,7 +4,8 @@ namespace App\Providers;
 
 use App\Models\BabyAction;
 use App\Services\LocalNotificationScheduler;
-use Ikromjon\LocalNotifications\Facades\LocalNotifications;
+use App\Services\NotificationPermission;
+use Ikromjon\LocalNotifications\Enums\PermissionStatus;
 use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
@@ -28,7 +29,13 @@ class NativeServiceProvider extends ServiceProvider
             return;
         }
 
-        LocalNotifications::requestPermission();
+        $permission = $this->app->make(NotificationPermission::class);
+
+        // Only prompt users who haven't decided yet; a denied user is offered
+        // recovery on the Notification Settings page instead of being nagged.
+        if ($permission->status() === PermissionStatus::NotDetermined) {
+            $permission->request();
+        }
 
         if (! Cache::has('notifications_resynced_at')) {
             $scheduler = $this->app->make(LocalNotificationScheduler::class);

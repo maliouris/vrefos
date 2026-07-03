@@ -3,6 +3,31 @@
         <h1 class="text-2xl font-bold">Notification Settings</h1>
     </div>
 
+    @if ($permissionStatus === \Ikromjon\LocalNotifications\Enums\PermissionStatus::NotDetermined->value)
+        <x-mary-alert
+            title="Notifications are not enabled"
+            description="Reminders won't be delivered until you allow notifications."
+            icon="o-bell-slash"
+            class="alert-warning mb-4"
+        >
+            <x-slot:actions>
+                <x-mary-button label="Allow notifications" class="btn-sm" wire:click="requestPermission" />
+            </x-slot:actions>
+        </x-mary-alert>
+    @elseif ($permissionStatus === \Ikromjon\LocalNotifications\Enums\PermissionStatus::Denied->value)
+        <x-mary-alert
+            title="Notifications are blocked"
+            description="Reminders won't be delivered. Allow notifications for this app to receive them."
+            icon="o-bell-slash"
+            class="alert-error mb-4"
+        >
+            <x-slot:actions>
+                <x-mary-button label="Try again" class="btn-sm" wire:click="requestPermission" />
+                <x-mary-button label="Open settings" class="btn-sm" wire:click="openAppSettings" />
+            </x-slot:actions>
+        </x-mary-alert>
+    @endif
+
     @if (session('success'))
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
     @endif
