@@ -13,6 +13,14 @@ use Illuminate\Support\Facades\DB;
 
 class LocalNotificationScheduler
 {
+    /**
+     * The app-wide notification chime, shipped into the native builds by the
+     * vrefos/native-assets plugin. Android bakes a channel's sound in at first
+     * use, so replacing the audio under the same filename won't update
+     * already-installed devices — rename the file to force a new channel.
+     */
+    public const SOUND_NAME = 'brefos_notification.wav';
+
     public function scheduleFor(BabyAction $action): bool
     {
         $scheduledKeys = [];
@@ -29,6 +37,7 @@ class LocalNotificationScheduler
                 'title' => $planned['title'],
                 'body' => $planned['body'],
                 'at' => $fireAt->timestamp,
+                'soundName' => self::SOUND_NAME,
                 'data' => ['action_id' => $action->id],
             ]);
 
@@ -165,7 +174,7 @@ class LocalNotificationScheduler
      * Guarded so it is a no-op on web/tests (no native runtime); extracted as a
      * seam so tests can capture the payload without the native runtime present.
      *
-     * @param  array{id: string, title: string, body: string, at: int, data: array{action_id: int}}  $payload
+     * @param  array{id: string, title: string, body: string, at: int, soundName: string, data: array{action_id: int}}  $payload
      */
     protected function dispatchSchedule(array $payload): void
     {
