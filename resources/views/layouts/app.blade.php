@@ -13,11 +13,14 @@
 
     {{-- NAVBAR --}}
     <x-mary-nav sticky full-width>
-        <x-slot:brand>
-            <label for="main-drawer" class="lg:hidden mr-3">
+        <x-slot:brand class="relative justify-center">
+            <label for="main-drawer" class="lg:hidden absolute left-0 top-1/2 -translate-y-1/2">
                 <x-mary-icon name="o-bars-3" class="cursor-pointer" />
             </label>
-            <span class="font-bold text-lg">{{ config('app.name', 'Vrefos') }}</span>
+            <picture>
+                <source srcset="{{ asset('vrefos-logo-dark.svg') }}" media="(prefers-color-scheme: dark)">
+                <img src="{{ asset('vrefos-logo.svg') }}" alt="{{ config('app.name', 'Vrefos') }}" class="h-8 w-auto">
+            </picture>
         </x-slot:brand>
     </x-mary-nav>
 
