@@ -150,6 +150,10 @@ return [
         'storage/framework/cache',
         'storage/framework/testing',
         'storage/logs/laravel.log',
+        // The local-notifications plugin is symlinked from a local fork whose own
+        // dev vendor/ contains a recursive testbench symlink; NativePHP's built-in
+        // 'vendor/*/vendor' exclude only covers single-level package paths.
+        'vendor/*/*/vendor',
     ],
 
     /*

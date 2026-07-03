@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4d7763af11b45e487cb4f808c2f2abd7",
+    "content-hash": "693e1e9c3e46f7ebc430edebfd22a040",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1433,27 +1433,22 @@
         },
         {
             "name": "ikromjon/nativephp-mobile-local-notifications",
-            "version": "v1.9.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications.git",
-                "reference": "c2205a03dd795e3c5d9a62d14928d2591022d0ea"
-            },
+            "version": "dev-develop",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Ikromjon1998/nativephp-mobile-local-notifications/zipball/c2205a03dd795e3c5d9a62d14928d2591022d0ea",
-                "reference": "c2205a03dd795e3c5d9a62d14928d2591022d0ea",
-                "shasum": ""
+                "type": "path",
+                "url": "/home/imaliouris/projects/nativephp-mobile-local-notifications",
+                "reference": "3f797af21eea4f2335a113a4e9605beea95fe4db"
             },
             "require": {
+                "illuminate/support": "^11.0||^12.0||^13.0",
                 "nativephp/mobile": "^3.0",
                 "php": "^8.3"
             },
             "require-dev": {
                 "larastan/larastan": "^3.0",
                 "laravel/pint": "^1.28",
-                "orchestra/testbench": "^9.0",
-                "pestphp/pest": "^3.0",
+                "orchestra/testbench": "^9.0||^10.0||^11.0",
+                "pestphp/pest": "^3.0||^4.0",
                 "phpstan/phpstan": "^2.0",
                 "rector/rector": "^2.3"
             },
@@ -1473,7 +1468,41 @@
                     "Ikromjon\\LocalNotifications\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Ikromjon\\LocalNotifications\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "pest"
+                ],
+                "analyse": [
+                    "phpstan analyse"
+                ],
+                "lint": [
+                    "pint"
+                ],
+                "lint:check": [
+                    "pint --test"
+                ],
+                "refactor": [
+                    "rector process"
+                ],
+                "refactor:check": [
+                    "rector process --dry-run"
+                ],
+                "check": [
+                    "@lint:check",
+                    "@refactor:check",
+                    "@analyse",
+                    "@test"
+                ],
+                "fix": [
+                    "@lint",
+                    "@refactor"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1487,11 +1516,10 @@
                 "reminders",
                 "schedule"
             ],
-            "support": {
-                "issues": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications/issues",
-                "source": "https://github.com/Ikromjon1998/nativephp-mobile-local-notifications/tree/v1.9.0"
-            },
-            "time": "2026-04-05T20:31:01+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": false
+            }
         },
         {
             "name": "jfcherng/php-color-output",
@@ -10268,7 +10296,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "ikromjon/nativephp-mobile-local-notifications": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
