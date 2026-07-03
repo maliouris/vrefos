@@ -7,13 +7,20 @@ use App\Models\Baby;
 use App\Models\BabyActionType;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
+use App\Services\NotificationPermission;
+use Ikromjon\LocalNotifications\Enums\PermissionStatus;
+use Ikromjon\LocalNotifications\Events\PermissionDenied;
+use Ikromjon\LocalNotifications\Events\PermissionGranted;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Native\Mobile\Attributes\OnNative;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    public string $permissionStatus = PermissionStatus::Granted->value;
+
     public bool $showModal = false;
 
     public ?int $editingId = null;
@@ -34,6 +41,40 @@ class Index extends Component
 
     /** @var array<int, int> */
     public array $targetBabyIds = [];
+
+    public function mount(NotificationPermission $permission): void
+    {
+        $this->permissionStatus = $permission->status()->value;
+
+        // Prompt undecided users as soon as they open the notifications section.
+        if ($this->permissionStatus === PermissionStatus::NotDetermined->value) {
+            $permission->request();
+        }
+    }
+
+    public function requestPermission(NotificationPermission $permission): void
+    {
+        $permission->request();
+
+        $this->permissionStatus = $permission->status()->value;
+    }
+
+    public function openAppSettings(NotificationPermission $permission): void
+    {
+        $permission->openAppSettings();
+    }
+
+    #[OnNative(PermissionGranted::class)]
+    public function onPermissionGranted(): void
+    {
+        $this->permissionStatus = PermissionStatus::Granted->value;
+    }
+
+    #[OnNative(PermissionDenied::class)]
+    public function onPermissionDenied(): void
+    {
+        $this->permissionStatus = PermissionStatus::Denied->value;
+    }
 
     public function openCreate(int $typeId): void
     {
