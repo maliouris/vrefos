@@ -14,11 +14,19 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "./packages/native-assets",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {
         "php": "^8.2",
         "ikromjon/nativephp-mobile-local-notifications": "dev-develop",
+        "vrefos/native-assets": "@dev",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.1",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "693e1e9c3e46f7ebc430edebfd22a040",
+    "content-hash": "402768d09e097fa33cb7fc8a3d5cf8c7",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1437,7 +1437,7 @@
             "dist": {
                 "type": "path",
                 "url": "/home/imaliouris/projects/nativephp-mobile-local-notifications",
-                "reference": "3f797af21eea4f2335a113a4e9605beea95fe4db"
+                "reference": "43d7f99f67f085c12cdf7ee1305108932b01ab94"
             },
             "require": {
                 "illuminate/support": "^11.0||^12.0||^13.0",
@@ -7449,6 +7449,36 @@
             "time": "2026-04-26T05:33:54+00:00"
         },
         {
+            "name": "vrefos/native-assets",
+            "version": "dev-notification-chime",
+            "dist": {
+                "type": "path",
+                "url": "./packages/native-assets",
+                "reference": "9f5f09f288a445eb120b5a48238ad90db781c407"
+            },
+            "type": "nativephp-plugin",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Vrefos\\NativeAssets\\NativeAssetsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Vrefos\\NativeAssets\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Ships app-specific native assets (notification chime) into the NativePHP mobile builds",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "workerman/workerman",
             "version": "v4.2.1",
             "source": {
@@ -10297,7 +10327,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "ikromjon/nativephp-mobile-local-notifications": 20
+        "ikromjon/nativephp-mobile-local-notifications": 20,
+        "vrefos/native-assets": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

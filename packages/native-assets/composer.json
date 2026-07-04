@@ -1,0 +1,18 @@
+{
+    "name": "vrefos/native-assets",
+    "description": "Ships app-specific native assets (notification chime) into the NativePHP mobile builds",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Vrefos\\NativeAssets\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Vrefos\\NativeAssets\\NativeAssetsServiceProvider"
+            ]
+        }
+    }
+}

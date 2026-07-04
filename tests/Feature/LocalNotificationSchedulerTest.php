@@ -462,6 +462,27 @@ class LocalNotificationSchedulerTest extends TestCase
         $this->assertSame('Due in 120 min', $captured[0]['body']);
     }
 
+    public function test_payload_includes_the_app_chime_sound_name(): void
+    {
+        $baby = Baby::factory()->create();
+        $actionType = BabyActionType::factory()->create();
+        $this->settingFor($actionType, ['title' => 'Time to eat!']);
+
+        $action = BabyAction::factory()
+            ->for($baby)
+            ->create([
+                'baby_action_type_id' => $actionType->id,
+                'started_at' => now()->subMinutes(10),
+                'finished_at' => null,
+            ]);
+
+        $captured = [];
+        $this->captureScheduled($action, $captured);
+
+        $this->assertCount(1, $captured);
+        $this->assertSame(LocalNotificationScheduler::SOUND_NAME, $captured[0]['soundName']);
+    }
+
     public function test_blank_description_yields_empty_body(): void
     {
         $baby = Baby::factory()->create();

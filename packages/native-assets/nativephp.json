@@ -1,0 +1,12 @@
+{
+    "namespace": "VrefosAssets",
+
+    "assets": {
+        "android": {
+            "sounds/brefos_notification.wav": "res/raw/brefos_notification.wav"
+        },
+        "ios": {
+            "sounds/brefos_notification.wav": "Resources/brefos_notification.wav"
+        }
+    }
+}
