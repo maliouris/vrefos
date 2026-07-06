@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Pages\Dashboard\Index as DashboardIndex;
 use App\Livewire\Pages\NotificationSettings\Index;
 use App\Services\NotificationPermission;
 use Ikromjon\LocalNotifications\Enums\PermissionStatus;
@@ -15,7 +16,7 @@ class NotificationPermissionTest extends TestCase
 
     /**
      * Bind a fake NotificationPermission that reports a canned status and
-     * counts request() calls, mirroring the scheduler's seam-fake style.
+     * counts openAppSettings() calls, mirroring the scheduler's seam-fake style.
      */
     private function fakePermission(PermissionStatus $status): NotificationPermission
     {
@@ -23,16 +24,16 @@ class NotificationPermissionTest extends TestCase
         {
             public PermissionStatus $fakeStatus = PermissionStatus::Granted;
 
-            public int $requestCalls = 0;
+            public int $openSettingsCalls = 0;
 
             public function status(): PermissionStatus
             {
                 return $this->fakeStatus;
             }
 
-            public function request(): void
+            public function openAppSettings(): void
             {
-                $this->requestCalls++;
+                $this->openSettingsCalls++;
             }
         };
 
@@ -49,54 +50,62 @@ class NotificationPermissionTest extends TestCase
         $this->assertTrue(app(NotificationPermission::class)->isGranted());
     }
 
-    public function test_mount_with_granted_permission_shows_no_banner(): void
+    public function test_granted_permission_shows_no_banner(): void
     {
         $this->fakePermission(PermissionStatus::Granted);
 
         Livewire::test(Index::class)
             ->assertSet('permissionStatus', 'granted')
-            ->assertDontSee('Notifications are not enabled')
-            ->assertDontSee('Notifications are blocked');
+            ->assertDontSee('Notifications are disabled');
     }
 
-    public function test_mount_with_undetermined_permission_prompts_and_shows_banner(): void
+    public function test_undetermined_permission_shows_the_banner_with_auto_prompt_hook(): void
     {
-        $fake = $this->fakePermission(PermissionStatus::NotDetermined);
+        $this->fakePermission(PermissionStatus::NotDetermined);
 
         Livewire::test(Index::class)
             ->assertSet('permissionStatus', 'not_determined')
-            ->assertSee('Notifications are not enabled')
-            ->assertSee('Allow notifications');
-
-        $this->assertSame(1, $fake->requestCalls);
+            ->assertSee('Notifications are disabled')
+            ->assertSee('Open settings')
+            ->assertDontSee('Try again')
+            ->assertSeeHtml('autoRequestNotificationPermission')
+            ->assertSeeHtml('wire:poll.5s="refreshPermissionStatus"');
     }
 
-    public function test_mount_with_denied_permission_shows_blocked_banner_without_prompting(): void
+    public function test_denied_permission_shows_the_same_banner(): void
     {
-        $fake = $this->fakePermission(PermissionStatus::Denied);
+        $this->fakePermission(PermissionStatus::Denied);
 
         Livewire::test(Index::class)
             ->assertSet('permissionStatus', 'denied')
-            ->assertSee('Notifications are blocked')
-            ->assertSee('Try again')
-            ->assertSee('Open settings');
-
-        $this->assertSame(0, $fake->requestCalls);
+            ->assertSee('Notifications are disabled')
+            ->assertSee('Open settings')
+            ->assertDontSee('Try again');
     }
 
-    public function test_request_permission_action_invokes_service_and_refreshes_status(): void
+    public function test_refresh_action_updates_the_status_and_clears_the_banner(): void
     {
         $fake = $this->fakePermission(PermissionStatus::Denied);
 
-        $component = Livewire::test(Index::class);
+        $component = Livewire::test(Index::class)
+            ->assertSee('Notifications are disabled');
 
+        // Simulate the user enabling notifications in the system settings:
+        // no native event fires, so the banner's poll picks up the change.
         $fake->fakeStatus = PermissionStatus::Granted;
 
-        $component->call('requestPermission')
+        $component->call('refreshPermissionStatus')
             ->assertSet('permissionStatus', 'granted')
-            ->assertDontSee('Notifications are blocked');
+            ->assertDontSee('Notifications are disabled');
+    }
 
-        $this->assertSame(1, $fake->requestCalls);
+    public function test_open_settings_action_invokes_the_service(): void
+    {
+        $fake = $this->fakePermission(PermissionStatus::Denied);
+
+        Livewire::test(Index::class)->call('openAppSettings');
+
+        $this->assertSame(1, $fake->openSettingsCalls);
     }
 
     public function test_permission_granted_event_clears_the_banner(): void
@@ -104,19 +113,51 @@ class NotificationPermissionTest extends TestCase
         $this->fakePermission(PermissionStatus::NotDetermined);
 
         Livewire::test(Index::class)
-            ->assertSee('Notifications are not enabled')
+            ->assertSee('Notifications are disabled')
             ->call('onPermissionGranted')
             ->assertSet('permissionStatus', 'granted')
-            ->assertDontSee('Notifications are not enabled');
+            ->assertDontSee('Notifications are disabled');
     }
 
-    public function test_permission_denied_event_switches_to_blocked_banner(): void
+    public function test_permission_denied_event_keeps_the_banner(): void
     {
         $this->fakePermission(PermissionStatus::NotDetermined);
 
         Livewire::test(Index::class)
             ->call('onPermissionDenied')
             ->assertSet('permissionStatus', 'denied')
-            ->assertSee('Notifications are blocked');
+            ->assertSee('Notifications are disabled');
+    }
+
+    public function test_dashboard_shows_the_banner_when_not_granted(): void
+    {
+        $this->fakePermission(PermissionStatus::Denied);
+
+        Livewire::test(DashboardIndex::class)
+            ->assertSet('permissionStatus', 'denied')
+            ->assertSee('Notifications are disabled')
+            ->assertSee('Open settings')
+            ->assertDontSee('Try again')
+            ->assertSeeHtml('autoRequestNotificationPermission')
+            ->assertSeeHtml('wire:poll.5s="refreshPermissionStatus"');
+    }
+
+    public function test_dashboard_shows_no_banner_when_granted(): void
+    {
+        $this->fakePermission(PermissionStatus::Granted);
+
+        Livewire::test(DashboardIndex::class)
+            ->assertDontSee('Notifications are disabled');
+    }
+
+    public function test_dashboard_permission_granted_event_clears_the_banner(): void
+    {
+        $this->fakePermission(PermissionStatus::Denied);
+
+        Livewire::test(DashboardIndex::class)
+            ->assertSee('Notifications are disabled')
+            ->call('onPermissionGranted')
+            ->assertSet('permissionStatus', 'granted')
+            ->assertDontSee('Notifications are disabled');
     }
 }

@@ -4,11 +4,11 @@ namespace App\Providers;
 
 use App\Models\BabyAction;
 use App\Services\LocalNotificationScheduler;
-use App\Services\NotificationPermission;
-use Ikromjon\LocalNotifications\Enums\PermissionStatus;
 use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
+use Native\Mobile\Providers\DeviceServiceProvider;
+use Native\Mobile\Providers\SystemServiceProvider;
 use Vrefos\NativeAssets\NativeAssetsServiceProvider;
 
 class NativeServiceProvider extends ServiceProvider
@@ -30,14 +30,10 @@ class NativeServiceProvider extends ServiceProvider
             return;
         }
 
-        $permission = $this->app->make(NotificationPermission::class);
-
-        // Only prompt users who haven't decided yet; a denied user is offered
-        // recovery on the Notification Settings page instead of being nagged.
-        if ($permission->status() === PermissionStatus::NotDetermined) {
-            $permission->request();
-        }
-
+        // Note: the notification permission auto-prompt does NOT live here — a
+        // bridge call during provider boot fires too early in the app cold
+        // start for the OS to show the dialog. It is triggered post-render
+        // via wire:init on the permission banner (HandlesNotificationPermission).
         if (! Cache::has('notifications_resynced_at')) {
             $scheduler = $this->app->make(LocalNotificationScheduler::class);
 
@@ -63,6 +59,9 @@ class NativeServiceProvider extends ServiceProvider
         return [
             LocalNotificationsServiceProvider::class,
             NativeAssetsServiceProvider::class,
+            SystemServiceProvider::class,
+            DeviceServiceProvider::class,
+
         ];
     }
 }

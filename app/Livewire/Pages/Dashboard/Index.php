@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Dashboard;
 
+use App\Livewire\Concerns\HandlesNotificationPermission;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use Carbon\Carbon;
@@ -11,6 +12,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use HandlesNotificationPermission;
+
     public function finishNow(BabyAction $babyAction): void
     {
         if ($babyAction->finished_at !== null) {
