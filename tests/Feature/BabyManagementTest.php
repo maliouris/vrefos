@@ -25,11 +25,23 @@ class BabyManagementTest extends TestCase
         $this->assertDatabaseHas('babies', ['name' => 'Lily']);
     }
 
-    public function test_create_requires_name_and_birth_date(): void
+    public function test_create_requires_name_but_not_birth_date(): void
     {
         Livewire::test(Create::class)
             ->call('save')
-            ->assertHasErrors(['name', 'birth_date']);
+            ->assertHasErrors(['name'])
+            ->assertHasNoErrors(['birth_date']);
+    }
+
+    public function test_create_persists_baby_without_birth_date(): void
+    {
+        Livewire::test(Create::class)
+            ->set('name', 'Lily')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('babies.show'));
+
+        $this->assertDatabaseHas('babies', ['name' => 'Lily', 'birth_date' => null]);
     }
 
     public function test_edit_updates_existing_baby(): void
@@ -43,5 +55,32 @@ class BabyManagementTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertEquals('New', $baby->fresh()->name);
+    }
+
+    public function test_edit_handles_baby_without_birth_date(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Old', 'birth_date' => null]);
+
+        Livewire::test(Edit::class, ['baby' => $baby])
+            ->assertSet('birth_date', '')
+            ->set('name', 'New')
+            ->call('update')
+            ->assertHasNoErrors();
+
+        $baby->refresh();
+        $this->assertEquals('New', $baby->name);
+        $this->assertNull($baby->birth_date);
+    }
+
+    public function test_edit_can_clear_birth_date(): void
+    {
+        $baby = Baby::factory()->create();
+
+        Livewire::test(Edit::class, ['baby' => $baby])
+            ->set('birth_date', '')
+            ->call('update')
+            ->assertHasNoErrors();
+
+        $this->assertNull($baby->fresh()->birth_date);
     }
 }

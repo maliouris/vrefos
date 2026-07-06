@@ -17,12 +17,12 @@ class Create extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'required|date',
+            'birth_date' => 'nullable|date',
         ]);
 
         Baby::create([
             'name' => $this->name,
-            'birth_date' => $this->birth_date,
+            'birth_date' => $this->birth_date ?: null,
         ]);
 
         session()->flash('success', 'Baby created successfully.');
