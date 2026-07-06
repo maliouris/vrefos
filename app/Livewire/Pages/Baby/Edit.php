@@ -19,19 +19,19 @@ class Edit extends Component
     {
         $this->baby = $baby;
         $this->name = $baby->name;
-        $this->birth_date = $baby->birth_date->format('Y-m-d');
+        $this->birth_date = $baby->birth_date?->format('Y-m-d') ?? '';
     }
 
     public function update(): void
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'birth_date' => 'required|date',
+            'birth_date' => 'nullable|date',
         ]);
 
         $this->baby->update([
             'name' => $this->name,
-            'birth_date' => $this->birth_date,
+            'birth_date' => $this->birth_date ?: null,
         ]);
 
         session()->flash('success', 'Baby updated successfully.');

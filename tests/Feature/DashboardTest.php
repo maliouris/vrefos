@@ -112,6 +112,16 @@ class DashboardTest extends TestCase
             ->assertDontSee('No reminders scheduled');
     }
 
+    public function test_shows_no_age_badge_for_baby_without_birth_date(): void
+    {
+        Baby::factory()->create(['name' => 'Emma', 'birth_date' => null]);
+
+        $component = Livewire::test(Index::class)
+            ->assertSee('Emma');
+
+        $this->assertNull($component->viewData('cards')->first()['age']);
+    }
+
     public function test_finish_now_marks_action_finished(): void
     {
         $baby = Baby::factory()->create();
