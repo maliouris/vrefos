@@ -20,16 +20,9 @@ class NotificationPermission
         return $this->status() === PermissionStatus::Granted;
     }
 
-    public function request(): void
-    {
-        $this->dispatchRequest();
-    }
-
     public function openAppSettings(): void
     {
-        if (function_exists('nativephp_call') && class_exists(System::class)) {
-            System::appSettings();
-        }
+        $this->dispatchOpenSettings();
     }
 
     /**
@@ -50,16 +43,17 @@ class NotificationPermission
     }
 
     /**
-     * Trigger the OS permission dialog via the native plugin. The user's answer
-     * arrives asynchronously through the PermissionGranted / PermissionDenied
-     * native events.
+     * Open the app's settings screen in the device settings, where the user
+     * can enable notifications after the OS has permanently blocked the
+     * permission dialog (Android does so after two denials). The native
+     * handler for System.OpenAppSettings ships with nativephp/mobile-system.
      *
      * Guarded so it is a no-op on web/tests; extracted as a seam for testing.
      */
-    protected function dispatchRequest(): void
+    protected function dispatchOpenSettings(): void
     {
-        if (function_exists('nativephp_call') && class_exists(LocalNotifications::class)) {
-            LocalNotifications::requestPermission();
+        if (function_exists('nativephp_call') && class_exists(System::class)) {
+            System::appSettings();
         }
     }
 }

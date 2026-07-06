@@ -23,6 +23,8 @@
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
     @endif
 
+    <x-notification-permission-banner :status="$permissionStatus" />
+
     {{-- QUICK ACTIONS --}}
     <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 mb-6">
         @if ($hasBabies)

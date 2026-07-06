@@ -17,6 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Single-user on-device app: the embedded PHP server is reachable only
+        // from the app's own webview, so CSRF adds no protection here. The
+        // webview restores stale DOM when the app reopens; its expired token
+        // would otherwise 419 the first Livewire call and pop Livewire's
+        // "This page has expired" modal on every app start. The _native bridge
+        // endpoint is exempted too: the JS auto-prompt for notification
+        // permission posts there with the (possibly stale) meta-tag token.
+        $middleware->validateCsrfTokens(except: [
+            'livewire/*',
+            'livewire-*',
+            '_native/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

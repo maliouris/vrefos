@@ -12,6 +12,7 @@ It is a **single-user, on-device app** — there is no authentication, no `User`
 - **Frontend:** Livewire v4, Tailwind CSS v4, daisyUI v5, MaryUI v2 (component prefix: `x-mary-`)
 - **Database:** SQLite (on-device via NativePHP; also used locally and in tests)
 - **Local Notifications:** `ikromjon/nativephp-mobile-local-notifications` v1.9
+- **System settings deep link:** `nativephp/mobile-system` v1 (native handler for `System::appSettings()`, used by the permission banner's "Open settings" button)
 - **Dev tools:** Vite + `@tailwindcss/vite`, Laravel Pint (code style), fumeapp/modeltyper (TS types from models)
 - **Runtime:** mise manages PHP 8.5 and Node 24 locally
 
@@ -39,10 +40,10 @@ npm ...                                     # Run any npm command
 
 - `app/Models/` — `Baby`, `BabyAction`, `BabyActionEatDetail`, `BabyActionType`, `NotificationSetting` (no `User` model — the app is single-user)
 - `app/Services/LocalNotificationScheduler.php` — Schedules, cancels, and reschedules on-device local notifications. Single chokepoint for all notification logic; all plugin calls go through the `dispatchSchedule()` / `dispatchCancel()` seams, guarded with `function_exists('nativephp_call')` for web/test compatibility (the seams also let tests capture the exact scheduled payload without a native runtime).
-- `app/Services/NotificationPermission.php` — Wraps the plugin's `checkPermission()` / `requestPermission()` and NativePHP's `System::appSettings()` behind the same guarded `dispatchCheck()` / `dispatchRequest()` seam pattern. Off-device (web/tests) `status()` resolves to `Granted`, so no permission UI shows in dev and tests need no native runtime.
+- `app/Services/NotificationPermission.php` — Wraps the plugin's `checkPermission()` and `System::appSettings()` (native handler from `nativephp/mobile-system`) behind the guarded `dispatchCheck()` / `dispatchOpenSettings()` seam pattern. Note Android never reports `not_determined` — a fresh install reads as `denied` — but the distinction doesn't matter to the UI (one banner for any non-granted status). Off-device (web/tests) `status()` resolves to `Granted`, so no permission UI shows in dev and tests need no native runtime. PHP never *requests* permission — prompting is client-side JS only (see Permission flow).
 - `app/Observers/BabyActionObserver.php` — Triggers the scheduler on `created`, `updated` (time/type fields), and `deleted` events.
 - `app/Observers/BabyObserver.php` — On baby `created`, attaches the new baby to every `all_children` notification rule (so "all children" stays dynamic as babies are added). Both observers are registered in `AppServiceProvider::boot()`.
-- `app/Providers/NativeServiceProvider.php` — Requests notification permission on boot **only when the OS reports `not_determined`** (denied users are never auto-nagged; recovery lives on the Notification Settings page); resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot.
+- `app/Providers/NativeServiceProvider.php` — Resyncs all pending notifications once per session (5-min cache TTL) to recover from OS alarm clearing after reboot, and allowlists the NativePHP plugins (`plugins()` array: local notifications, Vrefos assets, mobile-system, device). **Deliberately does not auto-prompt for notification permission** — a bridge call during provider boot fires too early in the app cold start for the OS dialog to appear; the auto-prompt is client-side JS on the banner instead (see Permission flow).
 - `app/Enums/FoodType.php` — `breast_milk`, `formula`, `fruits`, `vegetables`, `grains`, `protein`, `dairy`, `other`
 - `app/Enums/BreastSide.php` — `left` / `right`
 - `app/Enums/NotifyFrom.php` — `StartedAt` / `FinishedAt`
@@ -69,7 +70,7 @@ Baby ←→ belongsToMany ←→ NotificationSetting   (pivot: baby_notification
 - `app/Livewire/Pages/` — Full-page Livewire components (registered via `Route::get('/uri', ComponentClass::class)`)
 - `resources/views/livewire/pages/` — Blade views for Livewire page components
 - `resources/views/layouts/app.blade.php` — Main app layout (MaryUI `x-mary-main`, sidebar, navbar)
-- `resources/js/app.js` — JS entry point. No notification logic (notifications are handled natively), but it hosts the **datetime timezone helpers** described below: `utcToLocalInput`, `localInputToUtc`, and `formatLocalDateTime` (all on `window`).
+- `resources/js/app.js` — JS entry point. Hosts the **datetime timezone helpers** described below (`utcToLocalInput`, `localInputToUtc`, `formatLocalDateTime`) and `autoRequestNotificationPermission` — the client-side notification-permission auto-prompt (see Permission flow); all on `window`. No other notification logic lives in JS (notifications are handled natively).
 
 **Datetimes & timezones:** `started_at` / `finished_at` are stored as **true UTC instants** (`APP_TIMEZONE=UTC`). The webview is the only place that knows the device's local offset, so all conversion happens in the browser via the `app.js` helpers above: the `datetime-local` inputs use Alpine get/set accessors (`localInputToUtc` on input, `utcToLocalInput` for display), and the list renders times through `formatLocalDateTime`. This keeps the absolute timestamp handed to the OS alarm correct on non-UTC devices. `BabyAction\Create::mount()` seeds `started_at` with the current UTC wall-clock (`now()->format('Y-m-d\TH:i')`), which the form then shows in local time.
 
@@ -112,12 +113,26 @@ All MaryUI components use the `x-mary-` prefix (configured in `config/mary.php`)
 Root `/` is the **Dashboard** landing page (`Pages\Dashboard\Index`): per-baby cards showing the **latest 3
 actions** of any status (newest first by `started_at`, per-parent `limit(3)` on the eager load). Ongoing rows
 (`finished_at IS NULL`) show elapsed time and a "Finish now" button; finished rows show when they ended, no
-button. No reminder/notification info is shown on the dashboard. Quick "New Action" / "Add Child" shortcuts
+button. No per-action reminder info is shown on the dashboard, but the shared notification-permission banner
+(see Permission flow) appears above the quick actions when notifications aren't granted, so the user knows the
+app can't notify them. Quick "New Action" / "Add Child" shortcuts
 sit above the cards. Each card header shows an **age badge** from the baby's `birth_date` via `ageLabel()`:
 days under one month (e.g. `26d`, or `newborn`), `N mo` under two years, then `Ny` / `Ny Nmo`; no badge when
 `birth_date` is null. Cards are `min-w-0` grid items and the action list is wrapped in `overflow-x-auto` with
 `whitespace-nowrap` rows, so long content scrolls inside the card instead of widening the window. The page
 uses `wire:poll.60s` to keep elapsed labels fresh.
+
+### Sessions & CSRF (on-device webview)
+
+The NativePHP webview restores the last-rendered DOM when the app reopens, so a page can carry a long-dead
+session/CSRF token. To keep that from 419-ing Livewire calls (which pops Livewire's "This page has expired"
+modal): the Livewire endpoints (`livewire/*`, `livewire-*` — v4 uses an APP_KEY-derived hashed prefix like
+`livewire-a9621833/update`, and NativePHP regenerates APP_KEY per device) and the NativePHP bridge endpoint
+(`_native/*`, used by the JS permission auto-prompt) are **CSRF-exempt** in `bootstrap/app.php` (safe:
+single-user on-device app, the embedded PHP server is reachable only from the app's own webview), and the
+session lifetime defaults to one year (`config/session.php`, `SESSION_LIFETIME` in `.env`).
+Regression-guarded by `tests/Feature/CsrfExemptionTest.php` (middleware-level, because Laravel skips CSRF
+verification entirely under unit tests).
 
 ## Notification System
 
@@ -136,7 +151,7 @@ Reminders are delivered as **on-device local notifications** via `ikromjon/nativ
 
 **Settings change cascade:** When a rule is created, edited, toggled, or deleted, `NotificationSettings\Index` calls `rescheduleAllForType()` on the scheduler, which scans **all** actions of the type and cancels/reschedules them (so newly added/enabled rules also attach to existing actions; `scheduleFor` skips only ineligible ones — null reference time — while past-due rules fire immediately).
 
-**Permission flow:** `NotificationPermission` is the single wrapper around the plugin's permission API. App boot prompts only undecided (`not_determined`) users. `NotificationSettings\Index::mount()` reads the status into a `permissionStatus` string property and re-triggers the OS dialog when still undecided, so navigating to the section re-prompts. The page shows a banner when not granted: `not_determined` → warning with an "Allow notifications" button (`requestPermission` action); `denied` → error with "Try again" (Android allows a second dialog after one denial) and "Open settings" (`openAppSettings` → `System::appSettings()`). Because the dialog result arrives asynchronously, the component listens for the plugin's native events via `#[OnNative(PermissionGranted::class)]` / `#[OnNative(PermissionDenied::class)]` handlers that update `permissionStatus` live. Tests fake the service with a subclass bound in the container (`tests/Feature/NotificationPermissionTest.php`).
+**Permission flow:** `NotificationPermission` is the single wrapper around the plugin's permission API. The OS dialog opens **automatically after the page renders**, from the **browser side**: the banner carries `x-data x-init="window.autoRequestNotificationPermission?.()"` (helper in `resources/js/app.js`), which — after an ~800 ms settle delay, once per webview session via a `sessionStorage` guard set **only on success** — POSTs straight to NativePHP's `/_native/api/call` bridge endpoint with `{method: 'LocalNotifications.RequestPermission'}` and swallows all failures. It is deliberately **not** a Livewire request and **not** a provider-boot bridge call: boot-time calls fire too early in the cold start for the dialog to appear, and a failed Livewire request at startup pops Livewire's error modal ("404"/"page expired") on top of the app (both tried and failed). This is the **only** prompting mechanism — there is no prompt button. Android allows **two denials total**, after which the OS permanently blocks the dialog and further requests silently no-op. The banner UI is shared by the **Dashboard** and **Notification Settings** pages through the `App\Livewire\Concerns\HandlesNotificationPermission` trait (a `permissionStatus` property set by its mount hook, `refreshPermissionStatus` / `openAppSettings` actions, and `#[OnNative(PermissionGranted::class)]` / `#[OnNative(PermissionDenied::class)]` handlers that update `permissionStatus` live, since the dialog result arrives asynchronously) plus the `<x-notification-permission-banner :status="...">` Blade component: **one red banner** ("Notifications are disabled") for any non-granted status — a vertical daisyUI alert whose single bottom button, **"Open settings"**, opens the app's screen in device settings via `System::appSettings()` (native `System.OpenAppSettings` handler from the `nativephp/mobile-system` plugin, allowlisted in `NativeServiceProvider::plugins()`) — the only recovery once Android blocks the dialog. Because granting via the system Settings screen fires **no native event**, the banner also carries `wire:poll.5s="refreshPermissionStatus"`, so it clears within seconds of the user returning; the poll exists only while the banner is rendered. Tests fake the service with a subclass bound in the container (`tests/Feature/NotificationPermissionTest.php`, which also covers the dashboard banner).
 
 Users manage rules at `/notification-settings`: rules are grouped by action type with an inline per-rule enable toggle and delete, and a MaryUI modal to add/edit a rule (notify-after-minutes, notify-from start/end, required title, optional description, both with placeholders, enabled, and a **child selector**). The child selector is an always-visible segmented button group (`toggleAllChildren` / `toggleBaby` actions) with an "All children" button plus one per baby: selecting a child clears "All", and clearing the last child reverts to "All". The rule list shows each rule's target ("All children" or the comma-joined names). A type can have multiple rules. Default rules (Eat: 180 min from start, "Time to eat!"; Sleep: 60 min from start, "Time to wake your baby up!") are seeded via migration.
 
