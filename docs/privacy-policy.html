@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Privacy policy for Vrefos, the on-device baby activity tracker. All data stays on your device — nothing is collected, transmitted, shared, or sold.">
+    <title>Privacy Policy — Vrefos</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #fafaf9;
+            --surface: #ffffff;
+            --text: #1c1917;
+            --muted: #57534e;
+            --border: #e7e5e4;
+            --accent: #0d9488;
+            --summary-bg: #f0fdfa;
+            --summary-border: #99f6e4;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #1c1917;
+                --surface: #292524;
+                --text: #fafaf9;
+                --muted: #a8a29e;
+                --border: #44403c;
+                --accent: #2dd4bf;
+                --summary-bg: #134e4a33;
+                --summary-border: #134e4a;
+            }
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.65;
+            font-size: 1rem;
+        }
+        main {
+            max-width: 44rem;
+            margin: 0 auto;
+            padding: 2.5rem 1.25rem 4rem;
+        }
+        h1 {
+            font-size: 1.9rem;
+            line-height: 1.2;
+            margin: 0 0 0.25rem;
+        }
+        .meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 0 0 2rem;
+        }
+        h2 {
+            font-size: 1.25rem;
+            margin: 2.25rem 0 0.5rem;
+        }
+        p { margin: 0.5rem 0 1rem; }
+        ul { margin: 0.5rem 0 1rem; padding-left: 1.4rem; }
+        li { margin: 0.3rem 0; }
+        a { color: var(--accent); }
+        .summary {
+            background: var(--summary-bg);
+            border: 1px solid var(--summary-border);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin: 0 0 1rem;
+        }
+        .summary p { margin: 0; font-weight: 500; }
+        .table-wrap { overflow-x: auto; }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.95rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        th { font-weight: 600; }
+        code {
+            font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 0.85em;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.3rem;
+            padding: 0.1rem 0.35rem;
+            white-space: nowrap;
+        }
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Privacy Policy</h1>
+    <p class="meta">
+        Vrefos (<code>com.imaliouris.vrefos</code>) &middot; Effective July 6, 2026
+    </p>
+
+    <div class="summary">
+        <p>The short version: everything you record in Vrefos stays on your device.
+        The app collects nothing, transmits nothing, and shares or sells nothing.
+        There are no accounts, no analytics, and no ads.</p>
+    </div>
+
+    <p>Vrefos is a baby activity tracker for parents and caregivers. It runs
+    entirely on your device: it has no server component, requires no sign-up,
+    and works without an internet connection. This policy explains what
+    information the app stores locally and why it requests the permissions
+    it does.</p>
+
+    <h2>Information you enter</h2>
+    <p>To do its job, Vrefos stores the information you type into it:</p>
+    <ul>
+        <li>Your children's names and (optionally) birth dates.</li>
+        <li>Activity records — feeding and sleep times, food types, and related details.</li>
+        <li>Your reminder and notification preferences.</li>
+    </ul>
+    <p>All of this is saved only in a local database on your device. It is
+    never uploaded, synced, backed up to our systems, or made accessible to
+    us or anyone else.</p>
+
+    <h2>Information we collect</h2>
+    <p>None. Vrefos has no server and makes no network requests to us or to
+    any third party. We have no analytics, crash reporting, advertising, or
+    tracking of any kind, and no third-party services receive data from the
+    app.</p>
+
+    <h2>App permissions</h2>
+    <p>Vrefos requests a small set of Android permissions, all of which
+    support its on-device reminders:</p>
+    <div class="table-wrap">
+        <table>
+            <tr>
+                <th>Permission</th>
+                <th>Why the app uses it</th>
+            </tr>
+            <tr>
+                <td>Notifications</td>
+                <td>To show the feeding and sleep reminders you set up.</td>
+            </tr>
+            <tr>
+                <td>Exact alarms</td>
+                <td>So reminders fire at the exact time you chose rather than approximately.</td>
+            </tr>
+            <tr>
+                <td>Run after restart</td>
+                <td>To re-register your scheduled reminders after the device reboots, since Android clears pending alarms on restart.</td>
+            </tr>
+            <tr>
+                <td>Vibration &amp; wake lock</td>
+                <td>Standard notification delivery — vibrating and briefly waking the device when a reminder fires.</td>
+            </tr>
+            <tr>
+                <td>Internet &amp; network state</td>
+                <td>Used solely by the app's embedded local runtime, which serves the app's interface from within the device itself. No data is transmitted off the device.</td>
+            </tr>
+        </table>
+    </div>
+
+    <h2>Children's privacy</h2>
+    <p>Vrefos is designed for and directed at parents and caregivers, not at
+    children. The information you enter about your children stays on your
+    device, under your control, and is never transmitted anywhere.</p>
+
+    <h2>Data retention and deletion</h2>
+    <p>Your data exists only on your device, so you are always in full
+    control of it:</p>
+    <ul>
+        <li>Delete individual records or children at any time inside the app.</li>
+        <li>Remove everything by clearing the app's storage in your device settings, or by uninstalling the app.</li>
+    </ul>
+    <p>There are no remote copies for us to delete — once you remove the data
+    from your device, it is gone.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If a future version of Vrefos changes how it handles data — for
+    example, by adding an optional sync or backup feature — this policy will
+    be updated before that version is released, and the effective date above
+    will change.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy or the app? Email
+    <a href="mailto:giannismaliouris@gmail.com">giannismaliouris@gmail.com</a>.</p>
+
+    <footer>
+        <p>Vrefos &middot; <a href="index.html">Home</a> &middot;
+        <a href="https://github.com/maliouris/vrefos">Source on GitHub</a></p>
+    </footer>
+</main>
+</body>
+</html>
