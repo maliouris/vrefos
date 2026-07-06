@@ -26,13 +26,14 @@
     "require": {
         "php": "^8.2",
         "ikromjon/nativephp-mobile-local-notifications": "dev-develop",
-        "vrefos/native-assets": "@dev",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.1",
         "livewire/volt": "^1.7.0",
         "nativephp/mobile": "^3.3",
-        "robsontenorio/mary": "^2.8"
+        "nativephp/mobile-system": "^1.0",
+        "robsontenorio/mary": "^2.8",
+        "vrefos/native-assets": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
