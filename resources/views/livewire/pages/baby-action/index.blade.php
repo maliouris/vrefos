@@ -77,7 +77,7 @@
                             @endunless
                         </div>
 
-                        <x-mary-icon name="o-chevron-right" class="shrink-0 self-center text-base-content/30" />
+                        <x-mary-icon name="o-chevron-right" class="shrink-0 self-end text-base-content/30" />
                     </div>
                 </x-mary-card>
             @empty
