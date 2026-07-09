@@ -17,7 +17,16 @@
 
     <x-mary-table :headers="$headers" :rows="$babies">
         @scope('actions', $baby)
-            <x-mary-button label="Edit" icon="o-pencil" link="{{ route('babies.edit', $baby) }}" class="btn-ghost btn-sm" />
+            <div class="flex items-center gap-2">
+                <x-mary-button label="Edit" icon="o-pencil" link="{{ route('babies.edit', $baby) }}" class="btn-ghost btn-sm" />
+                <x-mary-button
+                    label="Delete"
+                    icon="o-trash"
+                    class="btn-ghost btn-sm text-error"
+                    wire:click="delete({{ $baby->id }})"
+                    wire:confirm="Delete {{ $baby->name }} and all of their recorded actions? This cannot be undone."
+                />
+            </div>
         @endscope
     </x-mary-table>
 </div>

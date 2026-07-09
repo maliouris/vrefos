@@ -18,46 +18,74 @@
         </x-mary-alert>
     @else
         @php
-            $headers = [
-                ['key' => 'baby.name',           'label' => 'Baby'],
-                ['key' => 'babyActionType.name',  'label' => 'Type'],
-                ['key' => 'started_at',           'label' => 'Started At'],
-                ['key' => 'finished_at',          'label' => 'Finished At'],
-                ['key' => 'eatDetail.food_type',  'label' => 'Food Type'],
-            ];
+            $typeIcon = fn (?string $name): string => match (strtolower((string) $name)) {
+                'eat' => 'o-cake',
+                'sleep' => 'o-moon',
+                default => 'o-clock',
+            };
+
+            $totalTime = fn ($action): string => $action->finished_at->diffForHumans($action->started_at, [
+                'parts' => 2,
+                'short' => true,
+                'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+            ]);
         @endphp
 
-        <x-mary-table :headers="$headers" :rows="$babyActions">
-            @scope('cell_started_at', $action)
-                <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span>
-            @endscope
+        <div class="space-y-4">
+            @forelse ($babyActions as $action)
+                <x-mary-card
+                    class="shadow-sm cursor-pointer active:bg-base-200 transition-colors"
+                    wire:key="action-{{ $action->id }}"
+                    x-data
+                    @click="Livewire.navigate('{{ route('baby_actions.edit', $action) }}')"
+                >
+                    @if ($action->finished_at === null)
+                        <span class="badge badge-primary badge-outline bg-base-100 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">Ongoing</span>
+                    @endif
 
-            @scope('cell_finished_at', $action)
-                <span x-data x-text="window.formatLocalDateTime(@js(optional($action->finished_at)->format('Y-m-d H:i')))"></span>
-            @endscope
+                    <div class="flex items-center gap-2">
+                        <div class="grow min-w-0">
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
+                                    <span class="font-semibold truncate">{{ $action->babyActionType?->name }}</span>
+                                    <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
+                                </div>
+                                @if ($action->eatDetail?->food_type)
+                                    <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}</span>
+                                @endif
+                            </div>
 
-            @scope('cell_eatDetail.food_type', $action)
-                @if ($action->eatDetail?->food_type)
-                    {{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}
-                @else
-                    —
-                @endif
-            @endscope
+                            <div class="text-sm text-base-content/60 space-y-1.5">
+                                <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
+                                @if ($action->finished_at)
+                                    <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
+                                    <div>Total: {{ $totalTime($action) }}</div>
+                                @endif
+                            </div>
 
-            @scope('actions', $action)
-                <div class="flex items-center gap-2">
-                    @unless ($action->finished_at)
-                        <x-mary-button
-                            label="Finish now"
-                            icon="o-flag"
-                            class="btn-ghost btn-sm"
-                            wire:click="finishNow({{ $action->id }})"
-                            wire:confirm="Mark this action as finished now?"
-                        />
-                    @endunless
-                    <x-mary-button label="Edit" icon="o-pencil" link="{{ route('baby_actions.edit', $action) }}" class="btn-ghost btn-sm" />
+                            @unless ($action->finished_at)
+                                <div class="w-fit mt-4" @click.stop>
+                                    <x-mary-button
+                                        label="Finish now"
+                                        icon="o-flag"
+                                        class="btn-primary btn-sm"
+                                        wire:click="finishNow({{ $action->id }})"
+                                        wire:confirm="Mark this action as finished now?"
+                                    />
+                                </div>
+                            @endunless
+                        </div>
+
+                        <x-mary-icon name="o-chevron-right" class="shrink-0 self-center text-base-content/30" />
+                    </div>
+                </x-mary-card>
+            @empty
+                <div class="flex items-center gap-2 text-base-content/60">
+                    <x-mary-icon name="o-minus-circle" class="shrink-0" />
+                    <span>No actions recorded yet</span>
                 </div>
-            @endscope
-        </x-mary-table>
+            @endforelse
+        </div>
     @endif
 </div>

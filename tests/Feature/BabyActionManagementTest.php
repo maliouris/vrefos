@@ -192,6 +192,7 @@ class BabyActionManagementTest extends TestCase
 
         $action->delete();
 
+        $this->assertDatabaseMissing('baby_actions', ['id' => $action->id]);
         $this->assertDatabaseMissing('baby_action_eat_details', ['id' => $detail->id]);
     }
 
@@ -213,6 +214,65 @@ class BabyActionManagementTest extends TestCase
         $finishedAt = $action->fresh()->finished_at;
         $this->assertNotNull($finishedAt);
         $this->assertEqualsWithDelta(now()->timestamp, $finishedAt->timestamp, 5);
+    }
+
+    public function test_index_renders_action_cards_with_details(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Maria']);
+        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
+
+        $ongoing = BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $eat->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => null,
+        ]);
+        $ongoing->eatDetail()->create([
+            'food_type' => FoodType::BreastMilk->value,
+            'breast_side' => BreastSide::Left->value,
+        ]);
+
+        Livewire::test(Index::class)
+            ->assertSee('Maria')
+            ->assertSee('Eat')
+            ->assertSeeHtml("Livewire.navigate('".route('baby_actions.edit', $ongoing)."')")
+            ->assertSee(FoodType::BreastMilk->label())
+            ->assertSee(BreastSide::Left->label())
+            ->assertSee('Ongoing')
+            ->assertSee('Finish now')
+            ->assertDontSee('Total:')
+            ->assertDontSee('Edit')
+            ->assertDontSee('Delete');
+
+        $ongoing->update(['finished_at' => now(), 'baby_action_type_id' => $sleep->id]);
+        $ongoing->eatDetail()->delete();
+
+        Livewire::test(Index::class)
+            ->assertSee('Sleep')
+            ->assertSee('Total:')
+            ->assertSee('1h')
+            ->assertDontSee('Ongoing')
+            ->assertDontSee('Finish now');
+    }
+
+    public function test_delete_removes_action_and_its_eat_detail(): void
+    {
+        $baby = Baby::factory()->create();
+        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        $action = BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $eat->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => null,
+        ]);
+        $detail = $action->eatDetail()->create(['food_type' => FoodType::Formula->value]);
+
+        Livewire::test(Edit::class, ['babyAction' => $action])
+            ->call('delete')
+            ->assertRedirect(route('baby_actions.show'));
+
+        $this->assertDatabaseMissing('baby_actions', ['id' => $action->id]);
+        $this->assertDatabaseMissing('baby_action_eat_details', ['id' => $detail->id]);
     }
 
     public function test_finish_now_is_noop_for_already_finished_action(): void

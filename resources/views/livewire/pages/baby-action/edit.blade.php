@@ -1,5 +1,14 @@
 <div>
-    <h1 class="text-2xl font-bold mb-4">Edit Baby Action</h1>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold">Edit Baby Action</h1>
+        <x-mary-button
+            label="Delete"
+            icon="o-trash"
+            class="btn-error btn-outline btn-sm"
+            wire:click="delete"
+            wire:confirm="Delete this action? This cannot be undone."
+        />
+    </div>
 
     @if (session('success'))
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />

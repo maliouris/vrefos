@@ -73,6 +73,8 @@ window.autoRequestNotificationPermission = () => {
 
 /**
  * Format a UTC wall-clock string for display in the device's local timezone.
+ * Uses 24-hour time; dates falling on the local today/yesterday are shown as
+ * "Today"/"Yesterday" instead of the full date.
  */
 window.formatLocalDateTime = (utc) => {
     if (!utc) {
@@ -82,13 +84,23 @@ window.formatLocalDateTime = (utc) => {
     if (isNaN(date.getTime())) {
         return '—';
     }
-    return date.toLocaleString([], {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
+
+    const time = date.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
+        hourCycle: 'h23',
     });
+
+    const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const daysAgo = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86400000);
+
+    if (daysAgo === 0) {
+        return `Today ${time}`;
+    }
+    if (daysAgo === 1) {
+        return `Yesterday ${time}`;
+    }
+    return `${date.toLocaleDateString()} ${time}`;
 };
 
 /**

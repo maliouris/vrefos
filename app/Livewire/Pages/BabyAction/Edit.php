@@ -120,6 +120,15 @@ class Edit extends Component
         session()->flash('success', 'Baby action updated successfully.');
     }
 
+    public function delete(): void
+    {
+        $this->babyAction->delete();
+
+        session()->flash('success', 'Baby action deleted.');
+
+        $this->redirectRoute('baby_actions.show', navigate: true);
+    }
+
     public function render()
     {
         $babies = Baby::all()->map(fn ($b) => ['id' => $b->id, 'name' => $b->name]);
