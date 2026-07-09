@@ -126,7 +126,12 @@ class LocalNotificationScheduler
 
         $action->notification_scheduled_at = null;
         $action->scheduled_notification_keys = null;
-        $action->saveQuietly();
+
+        // When cancelling because the action was deleted, saving would
+        // re-insert the row (exists is already false at that point).
+        if ($action->exists) {
+            $action->saveQuietly();
+        }
     }
 
     public function rescheduleFor(BabyAction $action): void
