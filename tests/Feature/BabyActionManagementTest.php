@@ -238,7 +238,6 @@ class BabyActionManagementTest extends TestCase
             ->assertSeeHtml("Livewire.navigate('".route('baby_actions.edit', $ongoing)."')")
             ->assertSee(FoodType::BreastMilk->label())
             ->assertSee(BreastSide::Left->label())
-            ->assertSee('Ongoing')
             ->assertSee('Finish now')
             ->assertDontSee('Total:')
             ->assertDontSee('Edit')
@@ -251,7 +250,6 @@ class BabyActionManagementTest extends TestCase
             ->assertSee('Sleep')
             ->assertSee('Total:')
             ->assertSee('1h')
-            ->assertDontSee('Ongoing')
             ->assertDontSee('Finish now');
     }
 

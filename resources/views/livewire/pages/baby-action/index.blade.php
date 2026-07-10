@@ -39,46 +39,38 @@
                     x-data
                     @click="Livewire.navigate('{{ route('baby_actions.edit', $action) }}')"
                 >
-                    @if ($action->finished_at === null)
-                        <span class="badge badge-primary badge-outline bg-base-100 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">Ongoing</span>
-                    @endif
-
-                    <div class="flex items-center gap-2">
-                        <div class="grow min-w-0">
-                            <div class="flex items-center justify-between gap-2 mb-3">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
-                                    <span class="text-lg font-semibold truncate">{{ $action->babyActionType?->name }}</span>
-                                    <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
-                                </div>
-                                @if ($action->eatDetail?->food_type)
-                                    <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}</span>
-                                @endif
-                            </div>
-
-                            <div class="text-base text-base-content/60 space-y-1.5">
-                                <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
-                                @if ($action->finished_at)
-                                    <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
-                                    <div>Total: {{ $totalTime($action) }}</div>
-                                @endif
-                            </div>
-
-                            @unless ($action->finished_at)
-                                <div class="w-fit mt-4" @click.stop>
-                                    <x-mary-button
-                                        label="Finish now"
-                                        icon="o-flag"
-                                        class="btn-primary"
-                                        wire:click="finishNow({{ $action->id }})"
-                                        wire:confirm="Mark this action as finished now?"
-                                    />
-                                </div>
-                            @endunless
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
+                            <span class="text-lg font-semibold truncate">{{ $action->babyActionType?->name }}</span>
+                            <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
                         </div>
-
-                        <x-mary-icon name="o-chevron-right" class="shrink-0 self-end text-base-content/30" />
+                        @if ($action->eatDetail?->food_type)
+                            <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}</span>
+                        @endif
                     </div>
+
+                    <div class="text-base text-base-content/60 space-y-1.5">
+                        <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
+                        @if ($action->finished_at)
+                            <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
+                            <div>Total: {{ $totalTime($action) }}</div>
+                        @endif
+                    </div>
+
+                    @unless ($action->finished_at)
+                        <div class="w-fit mt-4" @click.stop>
+                            <x-mary-button
+                                label="Finish now"
+                                icon="o-flag"
+                                class="btn-primary btn-sm"
+                                wire:click="finishNow({{ $action->id }})"
+                                wire:confirm="Mark this action as finished now?"
+                            />
+                        </div>
+                    @endunless
+
+                    <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
                 </x-mary-card>
             @empty
                 <div class="flex items-center gap-2 text-base-content/60">
