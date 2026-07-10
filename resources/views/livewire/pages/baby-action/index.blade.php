@@ -21,6 +21,8 @@
             $typeIcon = fn (?string $name): string => match (strtolower((string) $name)) {
                 'eat' => 'o-cake',
                 'sleep' => 'o-moon',
+                'temperature' => 'o-fire',
+                'medication' => 'o-beaker',
                 default => 'o-clock',
             };
 
@@ -41,24 +43,32 @@
                 >
                     <div class="flex items-center justify-between gap-2 mb-3">
                         <div class="flex items-center gap-2 min-w-0">
-                            <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
+                            <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ ! $action->babyActionType?->is_instant && $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
                             <span class="text-lg font-semibold truncate">{{ $action->babyActionType?->name }}</span>
                             <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
                         </div>
                         @if ($action->eatDetail?->food_type)
                             <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}</span>
+                        @elseif ($action->temperatureDetail)
+                            <span class="badge {{ $action->temperatureDetail->feverLevel()->badgeClass() }} shrink-0">{{ $action->temperatureDetail->temperature }}°C · {{ $action->temperatureDetail->feverLevel()->label() }}</span>
+                        @elseif ($action->medicationDetail)
+                            <span class="badge badge-info shrink-0">{{ $action->medicationDetail->medication->name }}{{ $action->medicationDetail->amount_ml ? ' · ' . $action->medicationDetail->amount_ml . ' ml' : '' }}</span>
                         @endif
                     </div>
 
                     <div class="text-base text-base-content/60 space-y-1.5">
-                        <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
-                        @if ($action->finished_at)
-                            <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
-                            <div>Total: {{ $totalTime($action) }}</div>
+                        @if ($action->babyActionType?->is_instant)
+                            <div>At: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
+                        @else
+                            <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
+                            @if ($action->finished_at)
+                                <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
+                                <div>Total: {{ $totalTime($action) }}</div>
+                            @endif
                         @endif
                     </div>
 
-                    @unless ($action->finished_at)
+                    @unless ($action->babyActionType?->is_instant || $action->finished_at)
                         <div class="w-fit mt-4" @click.stop>
                             <x-mary-button
                                 label="Finish now"

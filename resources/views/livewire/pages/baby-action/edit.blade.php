@@ -44,7 +44,7 @@
                 @error('baby_action_type_id') <span class="text-error text-sm">{{ $message }}</span> @enderror
             </div>
 
-            @if ($this->isEatAction)
+            @if ($this->isEatAction())
                 <div>
                     <label class="label"><span class="label-text">Food Type</span></label>
                     <div class="flex flex-wrap gap-2">
@@ -76,25 +76,93 @@
                 @endif
             @endif
 
+            @if ($this->isTemperatureAction())
+                <x-mary-input
+                    label="Temperature (°C)"
+                    wire:model="temperature"
+                    type="number"
+                    step="0.1"
+                    required
+                />
+                @error('temperature') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            @endif
+
+            @if ($this->isMedicationAction())
+                <div>
+                    <label class="label"><span class="label-text">Medication</span></label>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        @foreach ($medications as $m)
+                            <x-mary-button
+                                label="{{ $m['name'] }}"
+                                wire:click="toggleMedication({{ $m['id'] }})"
+                                class="btn-md {{ $medication_id === $m['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            />
+                        @endforeach
+                    </div>
+
+                    <x-mary-input
+                        label="Or type a new medication…"
+                        wire:model.live.debounce.300ms="new_medication_name"
+                        type="text"
+                        placeholder="New medication name"
+                    />
+                    @error('new_medication_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                @if (trim($new_medication_name) !== '')
+                    <div>
+                        <label class="label"><span class="label-text">Categories</span></label>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            @foreach ($medicationCategories as $c)
+                                <x-mary-button
+                                    label="{{ $c['name'] }}"
+                                    wire:click="toggleNewMedicationCategory({{ $c['id'] }})"
+                                    class="btn-sm {{ in_array($c['id'], $new_medication_category_ids) ? 'btn-primary' : 'btn-outline' }}"
+                                />
+                            @endforeach
+                        </div>
+
+                        <x-mary-input
+                            label="Or type a new category…"
+                            wire:model="new_category_name"
+                            type="text"
+                            placeholder="New category name"
+                        />
+                        @error('new_category_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                    </div>
+                @endif
+
+                <x-mary-input
+                    label="Amount (ml)"
+                    wire:model="amount_ml"
+                    type="number"
+                    step="0.01"
+                    placeholder="Optional"
+                />
+                @error('amount_ml') <span class="text-error text-sm">{{ $message }}</span> @enderror
+            @endif
+
             <div x-data="{
                     utc: @entangle('started_at'),
                     get local() { return window.utcToLocalInput(this.utc) },
                     set local(value) { this.utc = window.localInputToUtc(value) },
                  }">
-                <label class="label"><span class="label-text">Started At</span></label>
+                <label class="label"><span class="label-text">{{ $this->isInstantAction() ? 'Time' : 'Started At' }}</span></label>
                 <input type="datetime-local" x-model="local" required class="input input-bordered w-full" />
                 @error('started_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
             </div>
 
-            <div x-data="{
-                    utc: @entangle('finished_at'),
-                    get local() { return window.utcToLocalInput(this.utc) },
-                    set local(value) { this.utc = window.localInputToUtc(value) },
-                 }">
-                <label class="label"><span class="label-text">Finished At</span></label>
-                <input type="datetime-local" x-model="local" class="input input-bordered w-full" />
-                @error('finished_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
-            </div>
+            @unless ($this->isInstantAction())
+                <div x-data="{
+                        utc: @entangle('finished_at'),
+                        get local() { return window.utcToLocalInput(this.utc) },
+                        set local(value) { this.utc = window.localInputToUtc(value) },
+                     }">
+                    <label class="label"><span class="label-text">Finished At</span></label>
+                    <input type="datetime-local" x-model="local" class="input input-bordered w-full" />
+                    @error('finished_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
+                </div>
+            @endunless
 
             <x-slot:actions>
                 <x-mary-button label="Back" link="{{ route('baby_actions.show') }}" class="btn-ghost" />

@@ -19,6 +19,14 @@ class BabyActionTypeFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->word(),
+            'is_instant' => false,
         ];
+    }
+
+    public function instant(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_instant' => true,
+        ]);
     }
 }

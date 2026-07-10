@@ -82,17 +82,21 @@ class LocalNotificationScheduler
      */
     private function planFor(BabyAction $action): array
     {
-        $action->loadMissing(['baby', 'babyActionType']);
+        $action->loadMissing(['baby', 'babyActionType', 'temperatureDetail', 'medicationDetail.medication.categories']);
 
         $rules = NotificationSetting::where('baby_action_type_id', $action->baby_action_type_id)
             ->where('enabled', true)
-            ->with('babies:id')
+            ->with(['babies:id', 'feverLevelConditions', 'targetMedications:id', 'excludedMedications:id', 'medicationCategories:id'])
             ->get();
 
         $planned = [];
 
         foreach ($rules as $rule) {
             if (! $rule->all_children && ! $rule->babies->pluck('id')->contains($action->baby_id)) {
+                continue;
+            }
+
+            if (! $this->passesConditions($action, $rule)) {
                 continue;
             }
 
@@ -143,7 +147,7 @@ class LocalNotificationScheduler
     public function cancelAllForType(BabyActionType $type): int
     {
         $actions = BabyAction::where('baby_action_type_id', $type->id)
-            ->with(['baby', 'babyActionType'])
+            ->with(['baby', 'babyActionType', 'temperatureDetail', 'medicationDetail.medication.categories'])
             ->get();
 
         foreach ($actions as $action) {
@@ -156,7 +160,7 @@ class LocalNotificationScheduler
     public function rescheduleAllForType(BabyActionType $type): int
     {
         $actions = BabyAction::where('baby_action_type_id', $type->id)
-            ->with(['baby', 'babyActionType'])
+            ->with(['baby', 'babyActionType', 'temperatureDetail', 'medicationDetail.medication.categories'])
             ->get();
 
         $rescheduled = 0;
@@ -200,6 +204,55 @@ class LocalNotificationScheduler
         }
     }
 
+    /**
+     * Whether the action satisfies the rule's conditions. A rule with no
+     * condition rows applies to every action of its type. Conditions fail
+     * closed: a rule that requires a detail never matches an action without one.
+     */
+    private function passesConditions(BabyAction $action, NotificationSetting $rule): bool
+    {
+        $feverLevels = $rule->feverLevels();
+
+        if ($feverLevels->isNotEmpty()) {
+            $temperatureDetail = $action->temperatureDetail;
+
+            if ($temperatureDetail === null || ! $feverLevels->contains($temperatureDetail->feverLevel())) {
+                return false;
+            }
+        }
+
+        $hasMedicationConditions = $rule->targetMedications->isNotEmpty()
+            || $rule->excludedMedications->isNotEmpty()
+            || $rule->medicationCategories->isNotEmpty();
+
+        if ($hasMedicationConditions) {
+            $medication = $action->medicationDetail?->medication;
+
+            if ($medication === null) {
+                return false;
+            }
+
+            // Exclusion wins over any targeting, including "any medication" rules.
+            if ($rule->excludedMedications->contains('id', $medication->id)) {
+                return false;
+            }
+
+            $unrestricted = $rule->targetMedications->isEmpty() && $rule->medicationCategories->isEmpty();
+
+            $matchesMedication = $rule->targetMedications->contains('id', $medication->id);
+
+            $matchesCategory = $medication->categories->pluck('id')
+                ->intersect($rule->medicationCategories->pluck('id'))
+                ->isNotEmpty();
+
+            if (! $unrestricted && ! $matchesMedication && ! $matchesCategory) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function calculateFireAt(BabyAction $action, NotificationSetting $rule): ?Carbon
     {
         $referenceTime = $rule->notify_from === NotifyFrom::FinishedAt
@@ -231,9 +284,18 @@ class LocalNotificationScheduler
 
     private function applyPlaceholders(string $message, BabyAction $action, NotificationSetting $rule): string
     {
+        $temperatureDetail = $action->temperatureDetail;
+
         return str_replace(
-            ['#{minutes}', '#{action}', '#{baby}'],
-            [(string) $rule->notify_after_minutes, strtolower($action->babyActionType->name), $action->baby->name],
+            ['#{minutes}', '#{action}', '#{baby}', '#{temperature}', '#{fever_level}', '#{medication}'],
+            [
+                (string) $rule->notify_after_minutes,
+                strtolower($action->babyActionType->name),
+                $action->baby->name,
+                $temperatureDetail !== null ? number_format((float) $temperatureDetail->temperature, 1) : '',
+                $temperatureDetail?->feverLevel()->label() ?? '',
+                $action->medicationDetail?->medication?->name ?? '',
+            ],
             $message,
         );
     }

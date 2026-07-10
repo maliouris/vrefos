@@ -41,4 +41,14 @@ class BabyAction extends Model
     {
         return $this->hasOne(BabyActionEatDetail::class);
     }
+
+    public function temperatureDetail(): HasOne
+    {
+        return $this->hasOne(BabyActionTemperatureDetail::class);
+    }
+
+    public function medicationDetail(): HasOne
+    {
+        return $this->hasOne(BabyActionMedicationDetail::class);
+    }
 }

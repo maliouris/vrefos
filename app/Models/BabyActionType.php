@@ -12,6 +12,11 @@ class BabyActionType extends Model
 
     protected $fillable = [
         'name',
+        'is_instant',
+    ];
+
+    protected $casts = [
+        'is_instant' => 'boolean',
     ];
 
     public function babyActions(): HasMany

@@ -12,7 +12,7 @@ class Index extends Component
 {
     public function finishNow(BabyAction $babyAction): void
     {
-        if ($babyAction->finished_at !== null) {
+        if ($babyAction->babyActionType?->is_instant || $babyAction->finished_at !== null) {
             return;
         }
 
@@ -25,7 +25,7 @@ class Index extends Component
     {
         $hasBabies = Baby::exists();
 
-        $babyActions = BabyAction::with(['baby', 'babyActionType', 'eatDetail'])
+        $babyActions = BabyAction::with(['baby', 'babyActionType', 'eatDetail', 'temperatureDetail', 'medicationDetail.medication'])
             ->orderByDesc('started_at')
             ->get();
 
