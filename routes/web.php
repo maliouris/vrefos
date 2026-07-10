@@ -7,6 +7,8 @@ use App\Livewire\Pages\BabyAction\Create as BabyActionCreate;
 use App\Livewire\Pages\BabyAction\Edit as BabyActionEdit;
 use App\Livewire\Pages\BabyAction\Index as BabyActionIndex;
 use App\Livewire\Pages\Dashboard\Index as Dashboard;
+use App\Livewire\Pages\Medication\Edit as MedicationEdit;
+use App\Livewire\Pages\Medication\Index as MedicationIndex;
 use App\Livewire\Pages\NotificationSettings\Index;
 use Illuminate\Support\Facades\Route;
 
@@ -21,5 +23,8 @@ Route::get('/baby_actions/add', BabyActionCreate::class)->name('baby_actions.cre
 Route::get('/baby_actions/{babyAction}/edit', BabyActionEdit::class)->name('baby_actions.edit');
 
 Route::get('/notification-settings', Index::class)->name('notification-settings.edit');
+
+Route::get('/medications', MedicationIndex::class)->name('medications.show');
+Route::get('/medications/{medication}/edit', MedicationEdit::class)->name('medications.edit');
 
 Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));
