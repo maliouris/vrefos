@@ -70,7 +70,7 @@
                                     <x-mary-button
                                         label="Finish now"
                                         icon="o-flag"
-                                        class="btn-ghost btn-xs shrink-0"
+                                        class="btn-ghost btn-sm shrink-0"
                                         wire:click="finishNow({{ $action->id }})"
                                         wire:confirm="Mark this action as finished now?"
                                     />

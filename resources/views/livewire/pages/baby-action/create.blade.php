@@ -10,7 +10,7 @@
                         <x-mary-button
                             label="{{ $b['name'] }}"
                             wire:click="toggleBaby({{ $b['id'] }})"
-                            class="btn-sm {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            class="btn-md {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -24,7 +24,7 @@
                         <x-mary-button
                             label="{{ $t['name'] }}"
                             wire:click="toggleActionType({{ $t['id'] }})"
-                            class="btn-sm {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            class="btn-md {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -39,7 +39,7 @@
                             <x-mary-button
                                 label="{{ $ft['name'] }}"
                                 wire:click="toggleFoodType('{{ $ft['id'] }}')"
-                                class="btn-sm {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                class="btn-md {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -54,7 +54,7 @@
                                 <x-mary-button
                                     label="{{ $bs['name'] }}"
                                     wire:click="toggleBreastSide('{{ $bs['id'] }}')"
-                                    class="btn-sm {{ $breast_side === $bs['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                    class="btn-md {{ $breast_side === $bs['id'] ? 'btn-primary' : 'btn-outline' }}"
                                 />
                             @endforeach
                         </div>

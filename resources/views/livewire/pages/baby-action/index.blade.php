@@ -48,7 +48,7 @@
                             <div class="flex items-center justify-between gap-2 mb-3">
                                 <div class="flex items-center gap-2 min-w-0">
                                     <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
-                                    <span class="font-semibold truncate">{{ $action->babyActionType?->name }}</span>
+                                    <span class="text-lg font-semibold truncate">{{ $action->babyActionType?->name }}</span>
                                     <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
                                 </div>
                                 @if ($action->eatDetail?->food_type)
@@ -56,7 +56,7 @@
                                 @endif
                             </div>
 
-                            <div class="text-sm text-base-content/60 space-y-1.5">
+                            <div class="text-base text-base-content/60 space-y-1.5">
                                 <div>Started: <span x-data x-text="window.formatLocalDateTime(@js(optional($action->started_at)->format('Y-m-d H:i')))"></span></div>
                                 @if ($action->finished_at)
                                     <div>Finished: <span x-data x-text="window.formatLocalDateTime(@js($action->finished_at->format('Y-m-d H:i')))"></span></div>
@@ -69,7 +69,7 @@
                                     <x-mary-button
                                         label="Finish now"
                                         icon="o-flag"
-                                        class="btn-primary btn-sm"
+                                        class="btn-primary"
                                         wire:click="finishNow({{ $action->id }})"
                                         wire:confirm="Mark this action as finished now?"
                                     />

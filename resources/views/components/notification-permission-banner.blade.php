@@ -13,7 +13,7 @@
             <x-mary-icon name="o-bell-slash" class="shrink-0" />
             <span class="font-semibold">Notifications are disabled</span>
         </div>
-        <p class="text-sm">Reminders won't be delivered. Allow notifications for this app in the system settings.</p>
+        <p class="text-base">Reminders won't be delivered. Allow notifications for this app in the system settings.</p>
         <div class="flex gap-2">
             <x-mary-button label="Open settings" class="btn-sm" wire:click="openAppSettings" />
         </div>

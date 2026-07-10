@@ -13,6 +13,15 @@
 /* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Larger base type for one-handed mobile use; everything downstream is
+   rem-based (Tailwind, daisyUI, MaryUI) so the whole UI scales with this.
+   text-size-adjust keeps the Android webview from inflating text further. */
+html {
+    font-size: 18px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 /**
 * Paginator - Traditional style
 * Because Laravel defaults does not match well the design of daisyUI.
@@ -27,17 +36,18 @@
 }
 
 /* Mobile: open the menu drawer below the sticky top bar, not over it.
-   Mirrors MaryUI's lg:top-[65px]/h-[calc(100vh-65px)] offset, plus the
-   native safe-area inset that the top bar sits below. */
+   Mirrors MaryUI's lg:top-[65px]/h-[calc(100vh-65px)] offset (the navbar's
+   4rem min-height + 1px border, expressed in rem so it tracks the html
+   font-size above), plus the native safe-area inset the top bar sits below. */
 @media (max-width: 1023px) {
     .drawer-side {
-        top: calc(65px + env(safe-area-inset-top));
-        height: calc(100dvh - 65px - env(safe-area-inset-top));
+        top: calc(4rem + 1px + env(safe-area-inset-top));
+        height: calc(100dvh - 4rem - 1px - env(safe-area-inset-top));
     }
 
     /* Inner sliding panel uses h-screen by default; match the reduced height
        so its content doesn't overflow past the viewport. */
     .drawer-side > div {
-        height: calc(100dvh - 65px - env(safe-area-inset-top));
+        height: calc(100dvh - 4rem - 1px - env(safe-area-inset-top));
     }
 }

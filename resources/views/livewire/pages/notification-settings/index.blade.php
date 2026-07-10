@@ -101,7 +101,7 @@
                         <x-mary-button
                             label="All children"
                             wire:click="toggleAllChildren"
-                            class="btn-sm {{ $allChildren ? 'btn-primary' : 'btn-outline' }}"
+                            class="btn-md {{ $allChildren ? 'btn-primary' : 'btn-outline' }}"
                         />
                         @foreach ($babies as $baby)
                             <x-mary-button
