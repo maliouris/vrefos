@@ -40,7 +40,7 @@
                                 </div>
                                 @if ($rule->feverLevelConditions->isNotEmpty())
                                     <div class="text-sm opacity-70">
-                                        when fever is {{ $rule->feverLevelConditions->map(fn ($c) => $c->fever_level->label())->join(' or ') }}
+                                        when fever is {{ $rule->feverLevelConditions->map(fn ($c) => $c->fever_level->label() . ' (' . $c->fever_level->rangeLabel() . ')')->join(' or ') }}
                                     </div>
                                 @endif
                                 @if ($rule->targetMedications->isNotEmpty() || $rule->medicationCategories->isNotEmpty())
@@ -129,7 +129,7 @@
                             />
                             @foreach ($feverLevels as $level)
                                 <x-mary-button
-                                    label="{{ $level->label() }}"
+                                    label="{{ $level->label() }} ({{ $level->rangeLabel() }})"
                                     wire:click="toggleConditionFeverLevel('{{ $level->value }}')"
                                     class="btn-sm {{ in_array($level->value, $conditionFeverLevels) ? 'btn-primary' : 'btn-outline' }} {{ $level->badgeClass() }}"
                                 />

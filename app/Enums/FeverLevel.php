@@ -42,4 +42,15 @@ enum FeverLevel: string
             self::TooHigh => 'badge-error font-bold',
         };
     }
+
+    public function rangeLabel(): string
+    {
+        return match ($this) {
+            self::None => '< 36.9°C',
+            self::Low => '36.9–37.5°C',
+            self::Medium => '37.5–38.5°C',
+            self::High => '38.5–39.5°C',
+            self::TooHigh => '≥ 39.5°C',
+        };
+    }
 }
