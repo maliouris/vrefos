@@ -38,6 +38,22 @@
                                 <div class="text-sm opacity-70">
                                     {{ $rule->all_children ? 'All children' : $rule->babies->pluck('name')->join(', ') }}
                                 </div>
+                                @if ($rule->feverLevelConditions->isNotEmpty())
+                                    <div class="text-sm opacity-70">
+                                        when fever is {{ $rule->feverLevelConditions->map(fn ($c) => $c->fever_level->label())->join(' or ') }}
+                                    </div>
+                                @endif
+                                @if ($rule->targetMedications->isNotEmpty() || $rule->medicationCategories->isNotEmpty())
+                                    <div class="text-sm opacity-70">
+                                        for {{ collect()
+                                            ->merge($rule->targetMedications->pluck('name'))
+                                            ->merge($rule->medicationCategories->map(fn ($c) => 'any ' . strtolower($c->name)))
+                                            ->join(' or ') }}
+                                        @if ($rule->excludedMedications->isNotEmpty())
+                                            except {{ $rule->excludedMedications->pluck('name')->join(', ') }}
+                                        @endif
+                                    </div>
+                                @endif
                                 @if (filled($rule->description))
                                     <div class="text-sm opacity-70">{{ $rule->description }}</div>
                                 @endif
@@ -75,16 +91,18 @@
                     max="10080"
                     hint="e.g. 180 = 3 hours, 60 = 1 hour"
                 />
-                <x-mary-select
-                    label="Notify from"
-                    wire:model="notifyFrom"
-                    :options="[
-                        ['id' => 'started_at', 'name' => 'Start time'],
-                        ['id' => 'finished_at', 'name' => 'End time'],
-                    ]"
-                    option-value="id"
-                    option-label="name"
-                />
+                @if (!isset($ruleTypeId) || !\App\Models\BabyActionType::find($ruleTypeId)?->is_instant)
+                    <x-mary-select
+                        label="Notify from"
+                        wire:model="notifyFrom"
+                        :options="[
+                            ['id' => 'started_at', 'name' => 'Start time'],
+                            ['id' => 'finished_at', 'name' => 'End time'],
+                        ]"
+                        option-value="id"
+                        option-label="name"
+                    />
+                @endif
                 <x-mary-input
                     label="Title"
                     wire:model="title"
@@ -93,8 +111,92 @@
                 <x-mary-input
                     label="Description (optional)"
                     wire:model="description"
-                    hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}"
+                    hint="Placeholders: {{ '#{minutes}' }} {{ '#{action}' }} {{ '#{baby}' }}{{ isset($ruleTypeId) && \App\Models\BabyActionType::find($ruleTypeId)?->name === 'Temperature' ? ' #{temperature} #{fever_level}' : '' }}{{ isset($ruleTypeId) && \App\Models\BabyActionType::find($ruleTypeId)?->name === 'Medication' ? ' #{medication}' : '' }}"
                 />
+
+                @php
+                    $actionType = isset($ruleTypeId) ? \App\Models\BabyActionType::find($ruleTypeId) : null;
+                @endphp
+
+                @if ($actionType?->name === 'Temperature')
+                    <div>
+                        <label class="label"><span class="label-text">Fever Levels</span></label>
+                        <div class="flex flex-wrap gap-2">
+                            <x-mary-button
+                                label="Any reading"
+                                wire:click="$set('conditionFeverLevels', [])"
+                                class="btn-sm {{ empty($conditionFeverLevels) ? 'btn-primary' : 'btn-outline' }}"
+                            />
+                            @foreach ($feverLevels as $level)
+                                <x-mary-button
+                                    label="{{ $level->label() }}"
+                                    wire:click="toggleConditionFeverLevel('{{ $level->value }}')"
+                                    class="btn-sm {{ in_array($level->value, $conditionFeverLevels) ? 'btn-primary' : 'btn-outline' }} {{ $level->badgeClass() }}"
+                                />
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if ($actionType?->name === 'Medication')
+                    @if ($medications->isEmpty())
+                        <div class="alert alert-info">
+                            <span>Create medications first to set up medication-specific rules.</span>
+                        </div>
+                    @else
+                        <div>
+                            <label class="label"><span class="label-text">Medications</span></label>
+                            <div class="flex flex-wrap gap-2">
+                                <x-mary-button
+                                    label="Any"
+                                    wire:click="$set('conditionMedicationIds', [])"
+                                    class="btn-sm {{ empty($conditionMedicationIds) ? 'btn-primary' : 'btn-outline' }}"
+                                />
+                                @foreach ($medications as $med)
+                                    <x-mary-button
+                                        label="{{ $med->name }}"
+                                        wire:click="toggleConditionMedication({{ $med->id }})"
+                                        class="btn-sm {{ in_array($med->id, $conditionMedicationIds) ? 'btn-primary' : 'btn-outline' }}"
+                                    />
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="label"><span class="label-text">Categories</span></label>
+                            <div class="flex flex-wrap gap-2">
+                                <x-mary-button
+                                    label="Any"
+                                    wire:click="$set('conditionCategoryIds', [])"
+                                    class="btn-sm {{ empty($conditionCategoryIds) ? 'btn-primary' : 'btn-outline' }}"
+                                />
+                                @foreach ($medicationCategories as $cat)
+                                    <x-mary-button
+                                        label="{{ $cat->name }}"
+                                        wire:click="toggleConditionCategory({{ $cat->id }})"
+                                        class="btn-sm {{ in_array($cat->id, $conditionCategoryIds) ? 'btn-primary' : 'btn-outline' }}"
+                                    />
+                                @endforeach
+                            </div>
+                        </div>
+
+                        @if (!empty($conditionMedicationIds) || !empty($conditionCategoryIds))
+                            <div>
+                                <label class="label"><span class="label-text">Exclude Medications</span></label>
+                                <div class="flex flex-wrap gap-2">
+                                    @foreach ($medications as $med)
+                                        <x-mary-button
+                                            label="{{ $med->name }}"
+                                            wire:click="toggleExcludedMedication({{ $med->id }})"
+                                            class="btn-sm {{ in_array($med->id, $excludedMedicationIds) ? 'btn-error' : 'btn-outline' }}"
+                                        />
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+                @endif
+
                 <div>
                     <label class="label"><span class="label-text">Children</span></label>
                     <div class="flex flex-wrap gap-2">

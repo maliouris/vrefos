@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Pages\NotificationSettings;
 
+use App\Enums\FeverLevel;
 use App\Enums\NotifyFrom;
 use App\Livewire\Concerns\HandlesNotificationPermission;
 use App\Models\Baby;
 use App\Models\BabyActionType;
+use App\Models\Medication;
+use App\Models\MedicationCategory;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
 use Illuminate\Validation\Rule;
@@ -38,17 +41,30 @@ class Index extends Component
     /** @var array<int, int> */
     public array $targetBabyIds = [];
 
+    /** @var array<string> */
+    public array $conditionFeverLevels = [];
+
+    /** @var array<int> */
+    public array $conditionMedicationIds = [];
+
+    /** @var array<int> */
+    public array $conditionCategoryIds = [];
+
+    /** @var array<int> */
+    public array $excludedMedicationIds = [];
+
     public function openCreate(int $typeId): void
     {
         $this->resetForm();
         $this->ruleTypeId = $typeId;
-        $this->title = 'Time to '.strtolower(BabyActionType::findOrFail($typeId)->name).'!';
+        $type = BabyActionType::findOrFail($typeId);
+        $this->title = $type->is_instant ? 'Check on #{baby}!' : 'Time to '.strtolower($type->name).'!';
         $this->showModal = true;
     }
 
     public function openEdit(int $settingId): void
     {
-        $setting = NotificationSetting::findOrFail($settingId);
+        $setting = NotificationSetting::with(['feverLevelConditions', 'targetMedications:id', 'excludedMedications:id', 'medicationCategories:id'])->findOrFail($settingId);
 
         $this->editingId = $setting->id;
         $this->ruleTypeId = $setting->baby_action_type_id;
@@ -59,6 +75,10 @@ class Index extends Component
         $this->enabled = $setting->enabled;
         $this->allChildren = $setting->all_children;
         $this->targetBabyIds = $setting->all_children ? [] : $setting->babies->pluck('id')->all();
+        $this->conditionFeverLevels = $setting->feverLevelConditions->pluck('fever_level')->map(fn ($level) => $level->value)->all();
+        $this->conditionMedicationIds = $setting->targetMedications->pluck('id')->all();
+        $this->conditionCategoryIds = $setting->medicationCategories->pluck('id')->all();
+        $this->excludedMedicationIds = $setting->excludedMedications->pluck('id')->all();
         $this->showModal = true;
     }
 
@@ -80,6 +100,44 @@ class Index extends Component
         $this->allChildren = $this->targetBabyIds === [];
     }
 
+    public function toggleConditionFeverLevel(string $level): void
+    {
+        if (in_array($level, $this->conditionFeverLevels, true)) {
+            $this->conditionFeverLevels = array_values(array_diff($this->conditionFeverLevels, [$level]));
+        } else {
+            $this->conditionFeverLevels[] = $level;
+        }
+    }
+
+    public function toggleConditionMedication(int $medicationId): void
+    {
+        if (in_array($medicationId, $this->conditionMedicationIds, true)) {
+            $this->conditionMedicationIds = array_values(array_diff($this->conditionMedicationIds, [$medicationId]));
+        } else {
+            $this->conditionMedicationIds[] = $medicationId;
+            $this->excludedMedicationIds = array_values(array_diff($this->excludedMedicationIds, [$medicationId]));
+        }
+    }
+
+    public function toggleConditionCategory(int $categoryId): void
+    {
+        if (in_array($categoryId, $this->conditionCategoryIds, true)) {
+            $this->conditionCategoryIds = array_values(array_diff($this->conditionCategoryIds, [$categoryId]));
+        } else {
+            $this->conditionCategoryIds[] = $categoryId;
+        }
+    }
+
+    public function toggleExcludedMedication(int $medicationId): void
+    {
+        if (in_array($medicationId, $this->excludedMedicationIds, true)) {
+            $this->excludedMedicationIds = array_values(array_diff($this->excludedMedicationIds, [$medicationId]));
+        } else {
+            $this->excludedMedicationIds[] = $medicationId;
+            $this->conditionMedicationIds = array_values(array_diff($this->conditionMedicationIds, [$medicationId]));
+        }
+    }
+
     public function saveRule(LocalNotificationScheduler $scheduler): void
     {
         $this->validate([
@@ -92,6 +150,14 @@ class Index extends Component
             'allChildren' => 'boolean',
             'targetBabyIds' => [Rule::requiredIf(! $this->allChildren), 'array'],
             'targetBabyIds.*' => 'exists:babies,id',
+            'conditionFeverLevels' => 'array',
+            'conditionFeverLevels.*' => [Rule::enum(FeverLevel::class)],
+            'conditionMedicationIds' => 'array',
+            'conditionMedicationIds.*' => 'exists:medications,id',
+            'conditionCategoryIds' => 'array',
+            'conditionCategoryIds.*' => 'exists:medication_categories,id',
+            'excludedMedicationIds' => 'array',
+            'excludedMedicationIds.*' => 'exists:medications,id',
         ]);
 
         $type = BabyActionType::findOrFail($this->ruleTypeId);
@@ -114,6 +180,22 @@ class Index extends Component
 
         $babyIds = $this->allChildren ? Baby::pluck('id')->all() : $this->targetBabyIds;
         $setting->babies()->sync($babyIds);
+
+        // Sync condition rows: delete existing and create new ones per condition type
+        $setting->feverLevelConditions()->delete();
+        foreach ($this->conditionFeverLevels as $level) {
+            $setting->feverLevelConditions()->create(['fever_level' => $level]);
+        }
+
+        // Medication targeting: one sync call with ['excluded' => bool] pivot values
+        $medicationSync = [];
+        foreach (array_merge($this->conditionMedicationIds, $this->excludedMedicationIds) as $medId) {
+            $medicationSync[$medId] = ['excluded' => in_array($medId, $this->excludedMedicationIds, true)];
+        }
+        $setting->targetMedications()->sync($medicationSync);
+
+        // Category targeting
+        $setting->medicationCategories()->sync($this->conditionCategoryIds);
 
         $scheduler->rescheduleAllForType($type);
 
@@ -154,6 +236,10 @@ class Index extends Component
         $this->enabled = true;
         $this->allChildren = true;
         $this->targetBabyIds = [];
+        $this->conditionFeverLevels = [];
+        $this->conditionMedicationIds = [];
+        $this->conditionCategoryIds = [];
+        $this->excludedMedicationIds = [];
     }
 
     public function render()
@@ -161,6 +247,9 @@ class Index extends Component
         return view('livewire.pages.notification-settings.index', [
             'actionTypes' => BabyActionType::with('notificationSettings.babies:id,name')->orderBy('name')->get(),
             'babies' => Baby::orderBy('name')->get(['id', 'name']),
+            'feverLevels' => FeverLevel::cases(),
+            'medications' => Medication::orderBy('name')->get(['id', 'name']),
+            'medicationCategories' => MedicationCategory::orderBy('name')->get(['id', 'name']),
         ]);
     }
 }
