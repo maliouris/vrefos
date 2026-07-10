@@ -7,6 +7,7 @@ use App\Models\Medication;
 use App\Models\MedicationCategory;
 use App\Models\NotificationSetting;
 use App\Services\LocalNotificationScheduler;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -24,6 +25,39 @@ class Index extends Component
     public ?array $blockingRules = null;
 
     public ?array $uncategorizedMedications = null;
+
+    public bool $showAddCategoryModal = false;
+
+    public string $newCategoryName = '';
+
+    public function openAddCategoryModal(): void
+    {
+        $this->newCategoryName = '';
+        $this->resetErrorBag('newCategoryName');
+        $this->showAddCategoryModal = true;
+    }
+
+    public function closeAddCategoryModal(): void
+    {
+        $this->showAddCategoryModal = false;
+    }
+
+    public function createCategory(): void
+    {
+        $this->validate([
+            'newCategoryName' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('medication_categories', 'name'),
+            ],
+        ]);
+
+        MedicationCategory::create(['name' => trim($this->newCategoryName)]);
+
+        $this->showAddCategoryModal = false;
+        session()->flash('success', 'Category created.');
+    }
 
     public function deleteCategory(int $categoryId, LocalNotificationScheduler $scheduler): void
     {

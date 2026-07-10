@@ -10,8 +10,9 @@
     <div class="space-y-6">
         {{-- Medications List --}}
         <x-mary-card>
-            <div class="mb-4">
+            <div class="mb-4 flex items-center justify-between">
                 <h3 class="text-lg font-semibold">Medications</h3>
+                <x-mary-button label="Add" icon="o-plus" link="{{ route('medications.create') }}" class="btn-primary btn-sm" />
             </div>
 
             @forelse ($medications as $medication)
@@ -40,8 +41,9 @@
 
         {{-- Categories Section --}}
         <x-mary-card>
-            <div class="mb-4">
+            <div class="mb-4 flex items-center justify-between">
                 <h3 class="text-lg font-semibold">Categories</h3>
+                <x-mary-button label="Add" icon="o-plus" wire:click="openAddCategoryModal" class="btn-primary btn-sm" />
             </div>
 
             @forelse ($categories as $category)
@@ -95,6 +97,26 @@
                         <button class="btn btn-error flex-1" wire:click="confirmCategoryDelete({{ $deletingCategoryId }})">Delete</button>
                     </div>
                 @endif
+            </div>
+        </div>
+    @endif
+
+    {{-- Add Category Modal --}}
+    @if ($showAddCategoryModal)
+        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.closeAddCategoryModal()">
+            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
+                <h3 class="text-lg font-bold mb-4">Add Category</h3>
+
+                <x-mary-input
+                    label="Name"
+                    wire:model="newCategoryName"
+                    required
+                />
+
+                <div class="flex gap-2 mt-4">
+                    <button class="btn btn-ghost flex-1" @click="$wire.closeAddCategoryModal()">Cancel</button>
+                    <button class="btn btn-primary flex-1" wire:click="createCategory">Create</button>
+                </div>
             </div>
         </div>
     @endif
