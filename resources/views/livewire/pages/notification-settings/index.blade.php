@@ -68,8 +68,7 @@
                             <x-mary-button
                                 icon="o-trash"
                                 class="btn-sm btn-ghost text-error"
-                                wire:click="deleteRule({{ $rule->id }})"
-                                wire:confirm="Delete this notification rule?"
+                                wire:click="promptDeleteRule({{ $rule->id }})"
                             />
                         </div>
                     </div>
@@ -225,4 +224,18 @@
             </x-slot:actions>
         </x-mary-form>
     </x-mary-modal>
+
+    {{-- Delete Rule Modal --}}
+    @if ($deletingRuleId)
+        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.closeDeleteModal()">
+            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
+                <h3 class="text-lg font-bold mb-4">Delete notification rule?</h3>
+                <p class="mb-4">This will delete the rule and cancel its scheduled reminders.</p>
+                <div class="flex gap-2">
+                    <button class="btn btn-ghost flex-1" @click="$wire.closeDeleteModal()">Cancel</button>
+                    <button class="btn btn-error flex-1" wire:click="deleteRule({{ $deletingRuleId }})">Delete</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

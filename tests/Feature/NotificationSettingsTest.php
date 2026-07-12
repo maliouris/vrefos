@@ -128,6 +128,42 @@ class NotificationSettingsTest extends TestCase
         $this->assertContains("action-{$action->id}-setting-{$ruleKeep->id}", $keys);
     }
 
+    public function test_prompt_delete_rule_opens_modal(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type);
+
+        Livewire::test(Index::class)
+            ->call('promptDeleteRule', $rule->id)
+            ->assertSet('deletingRuleId', $rule->id);
+    }
+
+    public function test_close_delete_modal_closes_modal(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type);
+
+        Livewire::test(Index::class)
+            ->call('promptDeleteRule', $rule->id)
+            ->assertSet('deletingRuleId', $rule->id)
+            ->call('closeDeleteModal')
+            ->assertSet('deletingRuleId', null);
+    }
+
+    public function test_delete_rule_closes_modal_after_deleting(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type);
+
+        Livewire::test(Index::class)
+            ->call('promptDeleteRule', $rule->id)
+            ->call('deleteRule', $rule->id)
+            ->assertSet('deletingRuleId', null)
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseMissing('notification_settings', ['id' => $rule->id]);
+    }
+
     public function test_save_rule_with_all_children_attaches_every_baby(): void
     {
         $babyA = Baby::factory()->create();

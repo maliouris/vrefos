@@ -22,6 +22,8 @@ class Index extends Component
 
     public bool $showModal = false;
 
+    public ?int $deletingRuleId = null;
+
     public ?int $editingId = null;
 
     public ?int $ruleTypeId = null;
@@ -80,6 +82,16 @@ class Index extends Component
         $this->conditionCategoryIds = $setting->medicationCategories->pluck('id')->all();
         $this->excludedMedicationIds = $setting->excludedMedications->pluck('id')->all();
         $this->showModal = true;
+    }
+
+    public function promptDeleteRule(int $settingId): void
+    {
+        $this->deletingRuleId = $settingId;
+    }
+
+    public function closeDeleteModal(): void
+    {
+        $this->deletingRuleId = null;
     }
 
     public function toggleAllChildren(): void
@@ -213,6 +225,8 @@ class Index extends Component
         $setting->delete();
 
         $scheduler->rescheduleAllForType($type);
+
+        $this->deletingRuleId = null;
 
         session()->flash('success', 'Notification rule deleted.');
     }
