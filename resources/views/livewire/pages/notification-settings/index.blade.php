@@ -11,7 +11,7 @@
 
     <div class="space-y-6">
         @foreach ($actionTypes as $actionType)
-            <x-mary-card>
+            <div>
                 <div class="mb-4 flex items-center justify-between">
                     <h3 class="text-lg font-semibold">{{ $actionType->name }}</h3>
                     <x-mary-button
@@ -22,29 +22,39 @@
                     />
                 </div>
 
-                @forelse ($actionType->notificationSettings as $rule)
-                    <div class="flex items-center justify-between gap-4 border-b py-3 last:border-b-0">
-                        <div class="flex items-center gap-3">
-                            <x-mary-toggle
-                                wire:click="toggleEnabled({{ $rule->id }})"
-                                :checked="$rule->enabled"
-                            />
-                            <div>
-                                <div class="font-medium">{{ $rule->title }}</div>
-                                <div class="text-sm opacity-70">
+                <div class="space-y-4">
+                    @forelse ($actionType->notificationSettings as $rule)
+                        <x-mary-card
+                            class="shadow-sm cursor-pointer active:bg-base-200 transition-colors"
+                            wire:key="rule-{{ $rule->id }}"
+                            x-data
+                            wire:click="openEdit({{ $rule->id }})"
+                        >
+                            <div class="flex items-center gap-3 mb-3">
+                                <div @click.stop>
+                                    <x-mary-toggle
+                                        wire:click="toggleEnabled({{ $rule->id }})"
+                                        :checked="$rule->enabled"
+                                    />
+                                </div>
+                                <span class="text-lg font-semibold truncate">{{ $rule->title }}</span>
+                            </div>
+
+                            <div class="text-base text-base-content/60 space-y-1.5">
+                                <div>
                                     {{ $rule->notify_after_minutes }} min from
                                     {{ $rule->notify_from === \App\Enums\NotifyFrom::FinishedAt ? 'end' : 'start' }}
                                 </div>
-                                <div class="text-sm opacity-70">
+                                <div>
                                     {{ $rule->all_children ? 'All children' : $rule->babies->pluck('name')->join(', ') }}
                                 </div>
                                 @if ($rule->feverLevelConditions->isNotEmpty())
-                                    <div class="text-sm opacity-70">
+                                    <div>
                                         when fever is {{ $rule->feverLevelConditions->map(fn ($c) => $c->fever_level->label() . ' (' . $c->fever_level->rangeLabel() . ')')->join(' or ') }}
                                     </div>
                                 @endif
                                 @if ($rule->targetMedications->isNotEmpty() || $rule->medicationCategories->isNotEmpty())
-                                    <div class="text-sm opacity-70">
+                                    <div>
                                         for {{ collect()
                                             ->merge($rule->targetMedications->pluck('name'))
                                             ->merge($rule->medicationCategories->map(fn ($c) => 'any ' . strtolower($c->name)))
@@ -55,31 +65,41 @@
                                     </div>
                                 @endif
                                 @if (filled($rule->description))
-                                    <div class="text-sm opacity-70">{{ $rule->description }}</div>
+                                    <div>{{ $rule->description }}</div>
                                 @endif
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <x-mary-button
-                                icon="o-pencil"
-                                class="btn-sm btn-ghost"
-                                wire:click="openEdit({{ $rule->id }})"
-                            />
-                            <x-mary-button
-                                icon="o-trash"
-                                class="btn-sm btn-ghost text-error"
-                                wire:click="promptDeleteRule({{ $rule->id }})"
-                            />
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-sm opacity-70">No notification rules yet.</p>
-                @endforelse
-            </x-mary-card>
+
+                            <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
+                        </x-mary-card>
+                    @empty
+                        <p class="text-sm opacity-70">No notification rules yet.</p>
+                    @endforelse
+                </div>
+            </div>
         @endforeach
     </div>
 
-    <x-mary-modal wire:model="showModal" title="Notification rule">
+    {{-- Hides the mary-modal's built-in top-right close button (no per-button opt-out
+         in the component) while keeping backdrop-click/Escape-to-close, since our own
+         header supplies the only visible close affordance alongside Cancel/Save. --}}
+    <style>
+        .notification-rule-modal .modal-box > form > button.absolute {
+            display: none;
+        }
+    </style>
+
+    <x-mary-modal wire:model="showModal" class="notification-rule-modal">
+        <div class="flex items-center justify-between gap-3 mb-5">
+            <h3 class="text-xl font-extrabold">Notification rule</h3>
+            @if ($editingId)
+                <x-mary-button
+                    icon="o-trash"
+                    class="btn-circle btn-sm btn-ghost text-error"
+                    wire:click="promptDeleteRule({{ $editingId }})"
+                />
+            @endif
+        </div>
+
         <x-mary-form wire:submit="saveRule">
             <div class="flex flex-col gap-4">
                 <x-mary-input
