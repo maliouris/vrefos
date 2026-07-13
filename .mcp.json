@@ -5,8 +5,7 @@
             "args": [
                 "artisan",
                 "boost:mcp"
-            ],
-            "cwd": "/home/imaliouris/projects/vrefos/branches/main"
+            ]
         }
     }
 }

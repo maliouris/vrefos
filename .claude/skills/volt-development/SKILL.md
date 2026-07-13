@@ -14,7 +14,7 @@ Use `search-docs` for detailed Volt patterns and documentation.
 
 ## Basic Usage
 
-Create components with `vendor/bin/sail artisan make:volt [name] [--test] [--pest]`.
+Create components with `php artisan make:volt [name] [--test] [--pest]`.
 
 Important: Check existing Volt components to determine if they use functional or class-based style before creating new ones.
 
