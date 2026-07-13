@@ -8,25 +8,36 @@
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
     @endif
 
-    @php
-        $headers = [
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'birth_date', 'label' => 'Birth Date', 'format' => ['date', 'd/m/Y']],
-        ];
-    @endphp
+    <div class="space-y-4">
+        @forelse ($babies as $baby)
+            <x-mary-card
+                class="shadow-sm cursor-pointer active:bg-base-200 transition-colors"
+                wire:key="baby-{{ $baby->id }}"
+                x-data
+                @click="Livewire.navigate('{{ route('babies.edit', $baby) }}')"
+            >
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-lg font-semibold truncate">{{ $baby->name }}</span>
+                    </div>
+                    @if ($baby->ageLabel())
+                        <span class="badge badge-ghost shrink-0">{{ $baby->ageLabel() }}</span>
+                    @endif
+                </div>
 
-    <x-mary-table :headers="$headers" :rows="$babies">
-        @scope('actions', $baby)
-            <div class="flex items-center gap-2">
-                <x-mary-button label="Edit" icon="o-pencil" link="{{ route('babies.edit', $baby) }}" class="btn-ghost btn-sm" />
-                <x-mary-button
-                    label="Delete"
-                    icon="o-trash"
-                    class="btn-ghost btn-sm text-error"
-                    wire:click="delete({{ $baby->id }})"
-                    wire:confirm="Delete {{ $baby->name }} and all of their recorded actions? This cannot be undone."
-                />
+                @if ($baby->birth_date)
+                    <div class="text-base text-base-content/60">
+                        Born: {{ $baby->birth_date->format('d/m/Y') }}
+                    </div>
+                @endif
+
+                <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
+            </x-mary-card>
+        @empty
+            <div class="flex items-center gap-2 text-base-content/60">
+                <x-mary-icon name="o-minus-circle" class="shrink-0" />
+                <span>No children added yet</span>
             </div>
-        @endscope
-    </x-mary-table>
+        @endforelse
+    </div>
 </div>

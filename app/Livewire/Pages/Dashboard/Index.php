@@ -5,7 +5,6 @@ namespace App\Livewire\Pages\Dashboard;
 use App\Livewire\Concerns\HandlesNotificationPermission;
 use App\Models\Baby;
 use App\Models\BabyAction;
-use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -35,7 +34,7 @@ class Index extends Component
 
         $cards = $babies->map(fn (Baby $baby): array => [
             'baby' => $baby,
-            'age' => $this->ageLabel($baby->birth_date),
+            'age' => $baby->ageLabel(),
             'actions' => $baby->babyActions,
         ]);
 
@@ -43,29 +42,5 @@ class Index extends Component
             'cards' => $cards,
             'hasBabies' => $babies->isNotEmpty(),
         ]);
-    }
-
-    private function ageLabel(?Carbon $birthDate): ?string
-    {
-        if ($birthDate === null) {
-            return null;
-        }
-
-        $months = $birthDate->diffInMonths(now());
-
-        if ($months < 1) {
-            $days = (int) $birthDate->diffInDays(now());
-
-            return $days <= 0 ? 'newborn' : $days.'d';
-        }
-
-        if ($months < 24) {
-            return ((int) $months).' mo';
-        }
-
-        $years = (int) $birthDate->diffInYears(now());
-        $remainingMonths = ((int) $months) - ($years * 12);
-
-        return $remainingMonths > 0 ? $years.'y '.$remainingMonths.'mo' : $years.'y';
     }
 }

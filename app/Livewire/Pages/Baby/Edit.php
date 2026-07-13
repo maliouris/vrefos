@@ -15,6 +15,8 @@ class Edit extends Component
 
     public string $birth_date = '';
 
+    public bool $showDeleteModal = false;
+
     public function mount(Baby $baby): void
     {
         $this->baby = $baby;
@@ -35,6 +37,29 @@ class Edit extends Component
         ]);
 
         session()->flash('success', 'Baby updated successfully.');
+    }
+
+    public function promptDelete(): void
+    {
+        $this->showDeleteModal = true;
+    }
+
+    /**
+     * Delete the baby's actions one by one through Eloquent (so
+     * BabyActionObserver cancels their scheduled notifications) before
+     * removing the baby — the DB-level cascade would skip the observer.
+     */
+    public function confirmDelete(): void
+    {
+        foreach ($this->baby->babyActions()->get() as $action) {
+            $action->delete();
+        }
+
+        $this->baby->delete();
+
+        session()->flash('success', 'Baby deleted.');
+
+        $this->redirectRoute('babies.show', navigate: true);
     }
 
     public function render()

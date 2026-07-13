@@ -29,4 +29,28 @@ class Baby extends Model
     {
         return $this->belongsToMany(NotificationSetting::class);
     }
+
+    public function ageLabel(): ?string
+    {
+        if ($this->birth_date === null) {
+            return null;
+        }
+
+        $months = $this->birth_date->diffInMonths(now());
+
+        if ($months < 1) {
+            $days = (int) $this->birth_date->diffInDays(now());
+
+            return $days <= 0 ? 'newborn' : $days.'d';
+        }
+
+        if ($months < 24) {
+            return ((int) $months).' mo';
+        }
+
+        $years = (int) $this->birth_date->diffInYears(now());
+        $remainingMonths = ((int) $months) - ($years * 12);
+
+        return $remainingMonths > 0 ? $years.'y '.$remainingMonths.'mo' : $years.'y';
+    }
 }

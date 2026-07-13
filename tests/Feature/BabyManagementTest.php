@@ -101,9 +101,12 @@ class BabyManagementTest extends TestCase
 
         $scheduler = $this->spy(LocalNotificationScheduler::class);
 
-        Livewire::test(Index::class)
-            ->call('delete', $baby->id)
-            ->assertHasNoErrors();
+        Livewire::test(Edit::class, ['baby' => $baby])
+            ->call('promptDelete')
+            ->assertSet('showDeleteModal', true)
+            ->call('confirmDelete')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('babies.show'));
 
         $this->assertDatabaseMissing('babies', ['id' => $baby->id]);
         $this->assertDatabaseMissing('baby_actions', ['id' => $action->id]);
@@ -123,5 +126,20 @@ class BabyManagementTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertNull($baby->fresh()->birth_date);
+    }
+
+    public function test_index_lists_babies_as_cards(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Emma']);
+
+        Livewire::test(Index::class)
+            ->assertSee('Emma')
+            ->assertSeeHtml(route('babies.edit', $baby));
+    }
+
+    public function test_index_shows_empty_state_when_no_babies(): void
+    {
+        Livewire::test(Index::class)
+            ->assertSee('No children added yet');
     }
 }
