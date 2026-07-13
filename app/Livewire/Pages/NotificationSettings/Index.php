@@ -86,6 +86,9 @@ class Index extends Component
 
     public function promptDeleteRule(int $settingId): void
     {
+        // Closing the edit modal avoids the delete-confirm overlay (z-40)
+        // rendering behind the daisyUI modal (higher z-index).
+        $this->showModal = false;
         $this->deletingRuleId = $settingId;
     }
 
@@ -227,6 +230,7 @@ class Index extends Component
         $scheduler->rescheduleAllForType($type);
 
         $this->deletingRuleId = null;
+        $this->resetForm();
 
         session()->flash('success', 'Notification rule deleted.');
     }

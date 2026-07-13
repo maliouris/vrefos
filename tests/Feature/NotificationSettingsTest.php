@@ -138,6 +138,29 @@ class NotificationSettingsTest extends TestCase
             ->assertSet('deletingRuleId', $rule->id);
     }
 
+    public function test_prompt_delete_rule_closes_edit_modal(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type);
+
+        Livewire::test(Index::class)
+            ->call('openEdit', $rule->id)
+            ->assertSet('showModal', true)
+            ->call('promptDeleteRule', $rule->id)
+            ->assertSet('showModal', false)
+            ->assertSet('deletingRuleId', $rule->id);
+    }
+
+    public function test_row_navigates_to_edit_and_has_no_inline_action_buttons(): void
+    {
+        $type = BabyActionType::factory()->create(['name' => 'Eat']);
+        $rule = $this->ruleFor($type);
+
+        Livewire::test(Index::class)
+            ->assertSeeHtml("openEdit({$rule->id})")
+            ->assertDontSeeHtml("promptDeleteRule({$rule->id})");
+    }
+
     public function test_close_delete_modal_closes_modal(): void
     {
         $type = BabyActionType::factory()->create(['name' => 'Eat']);
