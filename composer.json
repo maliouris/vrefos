@@ -26,23 +26,22 @@
     "require": {
         "php": "^8.2",
         "ikromjon/nativephp-mobile-local-notifications": "dev-develop",
-        "laravel/framework": "^13.0",
+        "laravel/framework": "^13.40",
         "laravel/tinker": "^3.0",
-        "livewire/livewire": "^4.1",
-        "livewire/volt": "^1.7.0",
-        "nativephp/mobile": "^3.3",
-        "nativephp/mobile-system": "^1.0",
-        "robsontenorio/mary": "^2.8",
+        "livewire/livewire": "^4.4",
+        "livewire/volt": "^1.11",
+        "nativephp/mobile": "^4.7",
+        "robsontenorio/mary": "^2.9",
         "vrefos/native-assets": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "fumeapp/modeltyper": "^3.0",
-        "laravel/boost": "^2.4",
-        "laravel/pint": "^1.13",
+        "fumeapp/modeltyper": "^3.14",
+        "laravel/boost": "^2.10",
+        "laravel/pint": "^1.32",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
-        "phpunit/phpunit": "^13.0"
+        "phpunit/phpunit": "^13.4"
     },
     "autoload": {
         "psr-4": {
