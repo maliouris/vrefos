@@ -78,6 +78,9 @@
                     @if ($plan->ends_on && $plan->ends_on->isPast())
                         <span class="badge badge-ghost">Ended</span>
                     @endif
+                    @if ($plan->notifications->isEmpty())
+                        <span class="badge badge-warning badge-outline">No reminders</span>
+                    @endif
                 </div>
 
                 <div class="text-base text-base-content/60 space-y-1.5">
@@ -144,9 +147,10 @@
         }
     </style>
 
-    <x-mary-modal wire:model="showModal" class="plan-modal">
+    {{-- persistent: a stray backdrop tap or Escape must not throw away a half-filled plan; Cancel/Save close it. --}}
+    <x-mary-modal wire:model="showModal" class="plan-modal" persistent>
         <div class="flex items-center justify-between gap-3 mb-5">
-            <h3 class="text-xl font-extrabold">Plan</h3>
+            <h3 class="text-xl font-extrabold">{{ $editingId ? 'Edit plan' : 'New plan' }}</h3>
             @if ($editingId)
                 <x-mary-button
                     icon="o-trash"
@@ -287,7 +291,7 @@
                         @endforeach
                     </div>
                     <div class="flex gap-2 mt-2">
-                        <x-mary-input wire:model="newMessageTitle" placeholder="New message title" class="flex-1" />
+                        <x-mary-input wire:model="newStartMessageTitle" placeholder="New message title" class="flex-1" />
                         <x-mary-button label="Add" wire:click="createAndAttachMessage('start')" class="btn-sm" />
                     </div>
                 </div>
@@ -307,11 +311,20 @@
                             @endforeach
                         </div>
                         <div class="flex gap-2 mt-2">
-                            <x-mary-input wire:model="newMessageTitle" placeholder="New message title" class="flex-1" />
+                            <x-mary-input wire:model="newEndMessageTitle" placeholder="New message title" class="flex-1" />
                             <x-mary-button label="Add" wire:click="createAndAttachMessage('end')" class="btn-sm" />
                         </div>
                     @endif
                 </div>
+
+                @if ($startNotificationIds === [] && $endNotificationIds === [])
+                    <x-mary-alert
+                        icon="o-bell-slash"
+                        title="No reminders"
+                        description="This plan only shows on the calendar. Attach a message above to get a notification."
+                        class="alert-warning"
+                    />
+                @endif
 
                 <x-mary-toggle label="Enabled" wire:model="enabled" />
             </div>

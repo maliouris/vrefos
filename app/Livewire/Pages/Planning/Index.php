@@ -73,7 +73,9 @@ class Index extends Component
     /** @var array<int, int> */
     public array $endNotificationIds = [];
 
-    public string $newMessageTitle = '';
+    public string $newStartMessageTitle = '';
+
+    public string $newEndMessageTitle = '';
 
     public bool $showDeleteModal = false;
 
@@ -90,7 +92,13 @@ class Index extends Component
 
     public function mount(): void
     {
-        $this->anchorDate = now()->toDateString();
+        $this->anchorDate = $this->localToday();
+    }
+
+    /** Today's date on the device, not in UTC, so late evenings don't default to tomorrow/yesterday. */
+    private function localToday(): string
+    {
+        return now($this->deviceTimezone)->toDateString();
     }
 
     public function setDeviceTimezone(string $timezone): void
@@ -100,6 +108,10 @@ class Index extends Component
         }
 
         $this->deviceTimezone = $timezone;
+
+        if ($this->editingId === null && ! $this->showModal) {
+            $this->anchorDate = $this->localToday();
+        }
 
         $stalePlans = Plan::where('device_timezone', '!=', $timezone)->get();
 
@@ -359,10 +371,12 @@ class Index extends Component
 
     public function createAndAttachMessage(string $trigger): void
     {
-        $this->validate(['newMessageTitle' => 'required|string|max:255']);
+        $field = $trigger === 'end' ? 'newEndMessageTitle' : 'newStartMessageTitle';
 
-        $notification = Notification::create(['title' => $this->newMessageTitle]);
-        $this->newMessageTitle = '';
+        $this->validate([$field => 'required|string|max:255']);
+
+        $notification = Notification::create(['title' => $this->{$field}]);
+        $this->{$field} = '';
 
         if ($trigger === 'end') {
             $this->endNotificationIds[] = $notification->id;
@@ -380,7 +394,7 @@ class Index extends Component
             'startsOn' => 'nullable|date',
             'endsOn' => 'nullable|date|after_or_equal:startsOn',
             'intervalUnit' => ['required', Rule::enum(IntervalUnit::class)],
-            'intervalValue' => 'required|numeric|min:0.1',
+            'intervalValue' => 'required|numeric|min:0.5',
             'times' => 'array',
             'times.*' => 'date_format:H:i',
             'weekdays' => 'array',
@@ -594,12 +608,13 @@ class Index extends Component
         $this->intervalValue = 3;
         $this->times = ['08:00'];
         $this->weekdays = [];
-        $this->anchorDate = now()->toDateString();
+        $this->anchorDate = $this->localToday();
         $this->notifyFrom = 'started_at';
         $this->durationMinutes = null;
         $this->startNotificationIds = [];
         $this->endNotificationIds = [];
-        $this->newMessageTitle = '';
+        $this->newStartMessageTitle = '';
+        $this->newEndMessageTitle = '';
     }
 
     public function render()
@@ -607,7 +622,7 @@ class Index extends Component
         $babies = Baby::orderBy('name')->get();
         $actionTypes = BabyActionType::orderBy('name')->get();
         $notifications = Notification::orderBy('title')->get();
-        $plans = Plan::with(['babyActionType', 'babies', 'versions'])
+        $plans = Plan::with(['babyActionType', 'babies', 'versions', 'notifications'])
             ->when($this->activeBabyIds !== [], fn ($query) => $query->where(
                 fn ($query) => $query->where('all_children', true)
                     ->orWhereHas('babies', fn ($babies) => $babies->whereIn('babies.id', $this->activeBabyIds))

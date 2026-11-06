@@ -134,7 +134,7 @@ class PlanManagementTest extends TestCase
 
         Livewire::test(Index::class)
             ->set('babyActionTypeId', $type->id)
-            ->set('newMessageTitle', 'Quick message')
+            ->set('newStartMessageTitle', 'Quick message')
             ->call('createAndAttachMessage', 'start')
             ->call('savePlan')
             ->assertHasNoErrors();
