@@ -37,7 +37,7 @@ class DashboardTest extends TestCase
         Livewire::test(Index::class)
             ->assertSee('Emma')
             ->assertSee('Sleep')
-            ->assertSee('Finish now')
+            ->assertSee('Stop')
             ->assertDontSee('No actions yet');
     }
 
@@ -55,7 +55,7 @@ class DashboardTest extends TestCase
         Livewire::test(Index::class)
             ->assertSee('Sleep')
             ->assertSee('ended')
-            ->assertDontSee('Finish now')
+            ->assertDontSee('Stop')
             ->assertDontSee('No actions yet');
     }
 
@@ -132,5 +132,50 @@ class DashboardTest extends TestCase
             ->call('finishNow', $action->id);
 
         $this->assertNotNull($action->refresh()->finished_at);
+    }
+
+    public function test_each_baby_card_links_quick_actions_prefilled_with_baby_and_type(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Emma']);
+        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::test(Index::class)
+            ->assertSeeHtml(e(route('baby_actions.create', ['baby' => $baby->id, 'type' => $eat->id])));
+    }
+
+    public function test_a_running_action_replaces_its_quick_start_button(): void
+    {
+        $baby = Baby::factory()->create(['name' => 'Emma']);
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep', 'is_instant' => false]);
+
+        BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $sleep->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => null,
+        ]);
+
+        Livewire::test(Index::class)
+            ->assertDontSeeHtml(e(route('baby_actions.create', ['baby' => $baby->id, 'type' => $sleep->id])));
+    }
+
+    public function test_finish_now_can_be_undone(): void
+    {
+        $baby = Baby::factory()->create();
+        $type = BabyActionType::factory()->create(['is_instant' => false]);
+
+        $action = BabyAction::factory()->for($baby)->create([
+            'baby_action_type_id' => $type->id,
+            'started_at' => now()->subHour(),
+            'finished_at' => null,
+        ]);
+
+        Livewire::test(Index::class)
+            ->call('finishNow', $action->id)
+            ->assertSet('lastFinishedId', $action->id)
+            ->assertSee('Undo')
+            ->call('undoFinish')
+            ->assertSet('lastFinishedId', null);
+
+        $this->assertNull($action->refresh()->finished_at);
     }
 }

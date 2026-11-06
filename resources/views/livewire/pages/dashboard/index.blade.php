@@ -4,6 +4,8 @@
     $typeIcon = fn (?string $name): string => match (strtolower((string) $name)) {
         'eat' => 'o-cake',
         'sleep' => 'o-moon',
+        'temperature' => 'o-fire',
+        'medication' => 'o-beaker',
         default => 'o-clock',
     };
 
@@ -19,9 +21,7 @@
         <h1 class="text-2xl font-bold">Dashboard</h1>
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
+    <x-finished-undo :show="$lastFinishedId !== null" />
 
     <x-notification-permission-banner :status="$permissionStatus" />
 
@@ -51,6 +51,20 @@
                         @endif
                     </div>
 
+                    {{-- QUICK START --}}
+                    @if ($card['quickTypes']->isNotEmpty())
+                        <div class="grid grid-cols-2 gap-2 mb-4">
+                            @foreach ($card['quickTypes'] as $type)
+                                <x-mary-button
+                                    label="{{ $type->name }}"
+                                    icon="{{ $typeIcon($type->name) }}"
+                                    link="{{ route('baby_actions.create', ['baby' => $baby->id, 'type' => $type->id]) }}"
+                                    class="btn-outline"
+                                />
+                            @endforeach
+                        </div>
+                    @endif
+
                     {{-- LATEST ACTIONS --}}
                     <div class="overflow-x-auto">
                         @forelse ($card['actions'] as $action)
@@ -66,13 +80,12 @@
                                         @endif
                                     </span>
                                 </div>
-                                @if ($action->finished_at === null)
+                                @if ($action->finished_at === null && ! $action->babyActionType?->is_instant)
                                     <x-mary-button
-                                        label="Finish now"
-                                        icon="o-flag"
-                                        class="btn-ghost btn-sm shrink-0"
+                                        label="Stop"
+                                        icon="o-stop"
+                                        class="btn-primary shrink-0"
                                         wire:click="finishNow({{ $action->id }})"
-                                        wire:confirm="Mark this action as finished now?"
                                     />
                                 @endif
                             </div>

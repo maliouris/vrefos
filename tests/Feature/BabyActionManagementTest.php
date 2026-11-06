@@ -18,6 +18,70 @@ class BabyActionManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_create_prefills_baby_and_type_from_the_query_string(): void
+    {
+        $baby = Baby::factory()->create();
+        Baby::factory()->create();
+        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
+
+        Livewire::withQueryParams(['baby' => $baby->id, 'type' => $eat->id])
+            ->test(Create::class)
+            ->assertSet('baby_id', $baby->id)
+            ->assertSet('baby_action_type_id', $eat->id);
+    }
+
+    public function test_create_selects_a_lone_baby_automatically(): void
+    {
+        $baby = Baby::factory()->create();
+
+        Livewire::test(Create::class)->assertSet('baby_id', $baby->id);
+    }
+
+    public function test_create_leaves_baby_empty_when_there_are_several(): void
+    {
+        Baby::factory()->count(2)->create();
+
+        Livewire::test(Create::class)->assertSet('baby_id', null);
+    }
+
+    public function test_create_ignores_unknown_query_ids(): void
+    {
+        Baby::factory()->count(2)->create();
+
+        Livewire::withQueryParams(['baby' => 999, 'type' => 999])
+            ->test(Create::class)
+            ->assertSet('baby_id', null)
+            ->assertSet('baby_action_type_id', null);
+    }
+
+    public function test_selected_baby_and_type_cannot_be_deselected(): void
+    {
+        $baby = Baby::factory()->create();
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
+
+        Livewire::test(Create::class)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleBaby', $baby->id)
+            ->assertSet('baby_id', $baby->id)
+            ->call('toggleActionType', $sleep->id)
+            ->call('toggleActionType', $sleep->id)
+            ->assertSet('baby_action_type_id', $sleep->id);
+    }
+
+    public function test_save_returns_to_the_page_the_user_came_from(): void
+    {
+        $baby = Baby::factory()->create();
+        $sleep = BabyActionType::factory()->create(['name' => 'Sleep']);
+
+        $this->from(route('dashboard'));
+
+        Livewire::test(Create::class)
+            ->call('toggleActionType', $sleep->id)
+            ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
+            ->call('save')
+            ->assertRedirect(route('dashboard'));
+    }
+
     public function test_create_persists_action_without_eat_detail_for_non_eat_type(): void
     {
         $baby = Baby::factory()->create();
@@ -29,7 +93,7 @@ class BabyActionManagementTest extends TestCase
             ->set('started_at', now()->subHour()->format('Y-m-d\TH:i'))
             ->call('save')
             ->assertHasNoErrors()
-            ->assertRedirect(route('baby_actions.show'));
+            ->assertRedirect();
 
         $action = BabyAction::firstWhere('baby_id', $baby->id);
         $this->assertNotNull($action);

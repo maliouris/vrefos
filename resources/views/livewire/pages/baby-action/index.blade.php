@@ -10,6 +10,8 @@
         <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
     @endif
 
+    <x-finished-undo :show="$lastFinishedId !== null" />
+
     @if (!$hasBabies)
         <x-mary-alert title="No children added yet" description="You need to add a child before you can record baby actions." class="alert-info mb-4">
             <x-slot:actions>
@@ -75,7 +77,6 @@
                                 icon="o-flag"
                                 class="btn-primary btn-sm"
                                 wire:click="finishNow({{ $action->id }})"
-                                wire:confirm="Mark this action as finished now?"
                             />
                         </div>
                     @endunless

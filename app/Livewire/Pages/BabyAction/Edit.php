@@ -82,12 +82,12 @@ class Edit extends Component
 
     public function toggleBaby(int $babyId): void
     {
-        $this->baby_id = $this->baby_id === $babyId ? null : $babyId;
+        $this->baby_id = $babyId;
     }
 
     public function toggleActionType(int $actionTypeId): void
     {
-        $this->baby_action_type_id = $this->baby_action_type_id === $actionTypeId ? null : $actionTypeId;
+        $this->baby_action_type_id = $actionTypeId;
         $this->updatedBabyActionTypeId();
     }
 

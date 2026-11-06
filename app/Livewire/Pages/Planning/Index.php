@@ -223,6 +223,7 @@ class Index extends Component
                 'when' => $when,
                 'lines' => $lines,
                 'planId' => $plan->id,
+                'url' => route('baby_actions.create', ['baby' => (int) $matches[2], 'type' => $plan->baby_action_type_id]),
             ];
             $this->showEventModal = true;
         }

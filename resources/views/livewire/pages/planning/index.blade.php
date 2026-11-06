@@ -130,12 +130,13 @@
                 @endforeach
             </ul>
 
-            <div class="mt-6 flex gap-3">
+            <div class="mt-6 flex flex-wrap gap-3">
                 <x-mary-button label="Close" class="btn-ghost flex-1" wire:click="$set('showEventModal', false)" />
                 @if ($selectedEvent['kind'] === 'action')
                     <a href="{{ $selectedEvent['url'] }}" wire:navigate class="btn btn-primary flex-1">Open action</a>
                 @else
-                    <x-mary-button label="Edit plan" class="btn-primary flex-1" wire:click="openPlanFromEvent" />
+                    <x-mary-button label="Edit plan" class="btn-outline flex-1" wire:click="openPlanFromEvent" />
+                    <a href="{{ $selectedEvent['url'] }}" wire:navigate class="btn btn-primary flex-1">Log now</a>
                 @endif
             </div>
         @endif

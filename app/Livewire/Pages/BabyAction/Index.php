@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\BabyAction;
 
+use App\Livewire\Concerns\FinishesActions;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use Livewire\Attributes\Layout;
@@ -10,16 +11,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Index extends Component
 {
-    public function finishNow(BabyAction $babyAction): void
-    {
-        if ($babyAction->babyActionType?->is_instant || $babyAction->finished_at !== null) {
-            return;
-        }
-
-        $babyAction->update(['finished_at' => now()]);
-
-        session()->flash('success', 'Baby action finished.');
-    }
+    use FinishesActions;
 
     public function render()
     {

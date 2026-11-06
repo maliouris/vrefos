@@ -286,7 +286,9 @@ class PlanningCalendarTest extends TestCase
             ->assertSet('showEventModal', true)
             ->assertSet('selectedEvent.kind', 'plan')
             ->assertSet('selectedEvent.lines', ['Missed', 'Theo', 'Every 3 hours'])
-            ->assertSee('Edit plan');
+            ->assertSet('selectedEvent.url', route('baby_actions.create', ['baby' => $baby->id, 'type' => $type->id]))
+            ->assertSee('Edit plan')
+            ->assertSee('Log now');
 
         $component->call('openPlanFromEvent')
             ->assertSet('showEventModal', false)
