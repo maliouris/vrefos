@@ -12,7 +12,7 @@
      Livewire action expressions. A `blocked` dialog only offers Close. --}}
 @if ($show)
     <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="{{ $title }}" wire:click.self="{{ $cancel }}" @keydown.escape.window="$wire.{{ $cancel }}">
-        <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
+        <div class="bg-base-100 rounded-3xl p-6 max-w-md w-full mx-4 shadow-lg">
             <h3 class="text-lg font-bold mb-4">{{ $title }}</h3>
 
             @if ($message)

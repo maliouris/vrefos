@@ -1,8 +1,8 @@
 <div>
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">Baby Actions</h1>
+        <h1 class="text-3xl font-extrabold">Diary</h1>
         @if ($hasBabies)
-            <x-mary-button label="Add Action" icon="o-plus" link="{{ route('baby_actions.create') }}" class="btn-primary" />
+            <x-mary-button label="Log" icon="o-plus" link="{{ route('baby_actions.create') }}" class="btn-primary" />
         @endif
     </div>
 
@@ -34,7 +34,7 @@
                             label="{{ $baby->name }}"
                             wire:click="filterByBaby({{ $baby->id }})"
                             aria-pressed="{{ $babyFilter === $baby->id ? 'true' : 'false' }}"
-                            class="btn-sm {{ $babyFilter === $baby->id ? 'btn-primary' : 'btn-outline' }}"
+                            class="btn-sm rounded-full {{ $babyFilter === $baby->id ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -46,7 +46,7 @@
                         icon="{{ $type->icon() }}"
                         wire:click="filterByType({{ $type->id }})"
                         aria-pressed="{{ $typeFilter === $type->id ? 'true' : 'false' }}"
-                        class="btn-sm {{ $typeFilter === $type->id ? 'btn-primary' : 'btn-outline' }}"
+                        class="btn-sm rounded-full {{ $typeFilter === $type->id ? 'btn-primary' : 'btn-outline' }}"
                     />
                 @endforeach
             </div>
@@ -65,7 +65,7 @@
                 >
                     <div class="flex items-center justify-between gap-2 mb-3">
                         <div class="flex items-center gap-2 min-w-0">
-                            <x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="shrink-0 {{ ! $action->babyActionType?->is_instant && $action->finished_at === null ? 'text-primary' : 'text-base-content/40' }}" />
+                            <span class="type-chip-{{ $action->babyActionType?->slug() ?? 'other' }} flex items-center justify-center w-10 h-10 rounded-full shrink-0 {{ ! $action->babyActionType?->is_instant && $action->finished_at === null ? 'ring-2 ring-primary' : '' }}"><x-mary-icon name="{{ $typeIcon($action->babyActionType?->name) }}" class="type-icon w-5 h-5" /></span>
                             <span class="text-lg font-semibold truncate">{{ $action->babyActionType?->name }}</span>
                             <span class="text-base-content/70 truncate">· {{ $action->baby?->name }}</span>
                         </div>
@@ -104,9 +104,8 @@
                     <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
                 </x-mary-card>
             @empty
-                <div class="flex items-center gap-2 text-base-content/70">
-                    <x-mary-icon name="o-minus-circle" class="shrink-0" />
-                    <span>{{ $babyFilter || $typeFilter ? 'No actions match these filters' : 'No actions recorded yet' }}</span>
+                <div class="text-center text-base-content/60 py-8">
+                    {{ $babyFilter || $typeFilter ? 'No actions match these filters' : 'Nothing in the diary yet. Tap + to log your first moment 💛' }}
                 </div>
             @endforelse
         </div>

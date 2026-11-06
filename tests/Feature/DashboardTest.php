@@ -19,8 +19,8 @@ class DashboardTest extends TestCase
     public function test_shows_empty_state_when_no_babies(): void
     {
         Livewire::test(Index::class)
-            ->assertSee('No children added yet')
-            ->assertDontSee('No actions yet');
+            ->assertSee('No little ones yet')
+            ->assertDontSee('Nothing logged yet');
     }
 
     public function test_shows_ongoing_action_for_a_baby(): void
@@ -38,7 +38,7 @@ class DashboardTest extends TestCase
             ->assertSee('Emma')
             ->assertSee('Sleep')
             ->assertSee('Stop')
-            ->assertDontSee('No actions yet');
+            ->assertDontSee('Nothing logged yet');
     }
 
     public function test_shows_finished_action_without_finish_button(): void
@@ -56,7 +56,7 @@ class DashboardTest extends TestCase
             ->assertSee('Sleep')
             ->assertSee('ended')
             ->assertDontSee('Stop')
-            ->assertDontSee('No actions yet');
+            ->assertDontSee('Nothing logged yet');
     }
 
     public function test_shows_empty_actions_state_when_baby_has_no_actions(): void
@@ -64,7 +64,7 @@ class DashboardTest extends TestCase
         Baby::factory()->create();
 
         Livewire::test(Index::class)
-            ->assertSee('No actions yet');
+            ->assertSee('Nothing logged yet');
     }
 
     public function test_shows_only_latest_three_actions(): void

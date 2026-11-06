@@ -1,5 +1,4 @@
 @php
-    $calendarTokens = ['primary', 'secondary', 'accent', 'info', 'success', 'warning', 'error'];
     $calendars = [
         'planned' => [
             'colorName' => 'planned',
@@ -12,7 +11,7 @@
     ];
     $calendars['planned']['darkColors'] = $calendars['planned']['lightColors'];
     foreach ($actionTypes as $i => $type) {
-        $token = $calendarTokens[$i % count($calendarTokens)];
+        $token = $type->slug();
         $colors = [
             'main' => "var(--color-{$token})",
             'container' => "color-mix(in oklab, var(--color-{$token}) 20%, var(--color-base-100))",
@@ -28,7 +27,7 @@
 
 <div x-data x-init="$wire.setDeviceTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)">
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Planning</h1>
+        <h1 class="text-3xl font-extrabold">Planning</h1>
         <x-mary-button label="Add plan" icon="o-plus" wire:click="openCreate" class="btn-primary btn-sm" />
     </div>
 

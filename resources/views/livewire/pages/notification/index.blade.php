@@ -1,6 +1,6 @@
 <div>
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold">Notifications</h1>
+        <h1 class="text-3xl font-extrabold">Notifications</h1>
     </div>
 
     <x-notification-permission-banner :status="$permissionStatus" />

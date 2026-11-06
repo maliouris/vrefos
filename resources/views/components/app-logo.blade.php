@@ -1,1 +1,1 @@
-<span class="font-bold text-xl">{{ config('app.name', 'Vrefos') }}</span>
+<span class="font-extrabold text-xl tracking-tight text-primary">{{ config('app.name', 'Vrefos') }}</span>

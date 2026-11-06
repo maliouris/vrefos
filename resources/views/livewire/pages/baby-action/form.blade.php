@@ -8,7 +8,7 @@
                         <x-mary-button
                             label="{{ $b['name'] }}"
                             wire:click="toggleBaby({{ $b['id'] }})"
-                            aria-pressed="{{ $baby_id === $b['id'] ? 'true' : 'false' }}" class="btn-md {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            aria-pressed="{{ $baby_id === $b['id'] ? 'true' : 'false' }}" class="btn-md rounded-full {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -17,13 +17,14 @@
 
             <div>
                 <label class="label"><span class="label-text">Action Type</span></label>
-                <div class="flex flex-wrap gap-2">
+                <div class="grid grid-cols-2 gap-2">
                     @foreach ($actionTypes as $t)
-                        <x-mary-button
-                            label="{{ $t['name'] }}"
-                            wire:click="toggleActionType({{ $t['id'] }})"
-                            aria-pressed="{{ $baby_action_type_id === $t['id'] ? 'true' : 'false' }}" class="btn-md {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
-                        />
+                        <button type="button" wire:click="toggleActionType({{ $t['id'] }})"
+                            aria-pressed="{{ $baby_action_type_id === $t['id'] ? 'true' : 'false' }}"
+                            class="type-chip-{{ \App\Models\BabyActionType::slugFor($t['name']) }} flex flex-col items-center justify-center gap-1 min-h-20 rounded-2xl font-bold active:scale-95 transition-transform {{ $baby_action_type_id === $t['id'] ? 'ring-4 ring-primary' : '' }}">
+                            <x-mary-icon name="{{ \App\Models\BabyActionType::iconFor($t['name']) }}" class="type-icon w-7 h-7" />
+                            <span>{{ $t['name'] }}</span>
+                        </button>
                     @endforeach
                 </div>
                 @error('baby_action_type_id') <span class="text-error text-sm">{{ $message }}</span> @enderror
@@ -37,7 +38,7 @@
                             <x-mary-button
                                 label="{{ $ft['name'] }}"
                                 wire:click="toggleFoodType('{{ $ft['id'] }}')"
-                                aria-pressed="{{ $food_type === $ft['id'] ? 'true' : 'false' }}" class="btn-md {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $food_type === $ft['id'] ? 'true' : 'false' }}" class="btn-md rounded-full {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -64,7 +65,7 @@
                             <x-mary-button
                                 label="{{ $m['name'] }}"
                                 wire:click="toggleMedication({{ $m['id'] }})"
-                                aria-pressed="{{ $medication_id === $m['id'] ? 'true' : 'false' }}" class="btn-md {{ $medication_id === $m['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $medication_id === $m['id'] ? 'true' : 'false' }}" class="btn-md rounded-full {{ $medication_id === $m['id'] ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>

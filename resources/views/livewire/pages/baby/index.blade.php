@@ -1,6 +1,6 @@
 <div>
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold">Babies</h1>
+        <h1 class="text-3xl font-extrabold">My little ones</h1>
         <x-mary-button label="Add Baby" icon="o-plus" link="{{ route('babies.create') }}" class="btn-primary" />
     </div>
 
@@ -33,10 +33,7 @@
                 <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
             </x-mary-card>
         @empty
-            <div class="flex items-center gap-2 text-base-content/70">
-                <x-mary-icon name="o-minus-circle" class="shrink-0" />
-                <span>No children added yet</span>
-            </div>
+            <div class="text-center text-base-content/60 py-8">No children added yet. Add your baby to get started 💛</div>
         @endforelse
     </div>
 </div>

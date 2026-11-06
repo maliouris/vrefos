@@ -1,7 +1,94 @@
 @import "tailwindcss";
+@import "@fontsource-variable/nunito";
 
-@plugin "daisyui" {
-    themes: light --default, dark --prefersdark;
+@plugin "daisyui";
+
+/* Warm blush & cream: day theme (default). */
+@plugin "daisyui/theme" {
+    name: "vrefos-day";
+    default: true;
+    prefersdark: false;
+    color-scheme: light;
+
+    --color-base-100: #ffffff;
+    --color-base-200: #fff8f3;
+    --color-base-300: #f6e7dd;
+    --color-base-content: #3b2e2a;
+    --color-primary: #e8846b;
+    --color-primary-content: #3a1a10;
+    --color-secondary: #9db89a;
+    --color-secondary-content: #1f2e1d;
+    --color-accent: #b7a6e0;
+    --color-accent-content: #261c42;
+    --color-neutral: #5b4a45;
+    --color-neutral-content: #fff8f3;
+    --color-info: #8ec5e8;
+    --color-info-content: #10303f;
+    --color-success: #7fb98a;
+    --color-success-content: #12301a;
+    --color-warning: #f2c27a;
+    --color-warning-content: #3d2a07;
+    --color-error: #e07070;
+    --color-error-content: #3d0f0f;
+
+    --radius-selector: 2rem;
+    --radius-field: 1rem;
+    --radius-box: 1.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 1;
+    --noise: 0;
+}
+
+/* Dim "night feed" theme: low glare for 3am feeds. */
+@plugin "daisyui/theme" {
+    name: "vrefos-night";
+    default: false;
+    prefersdark: true;
+    color-scheme: dark;
+
+    --color-base-100: #2a2540;
+    --color-base-200: #1e1b2e;
+    --color-base-300: #3a3352;
+    --color-base-content: #ede4f0;
+    --color-primary: #f09a80;
+    --color-primary-content: #3a1a10;
+    --color-secondary: #a9c4a6;
+    --color-secondary-content: #1f2e1d;
+    --color-accent: #c6b8ee;
+    --color-accent-content: #261c42;
+    --color-neutral: #3a3352;
+    --color-neutral-content: #ede4f0;
+    --color-info: #9fd0ee;
+    --color-info-content: #10303f;
+    --color-success: #8fc99a;
+    --color-success-content: #12301a;
+    --color-warning: #f5cd8c;
+    --color-warning-content: #3d2a07;
+    --color-error: #ec8585;
+    --color-error-content: #3d0f0f;
+
+    --radius-selector: 2rem;
+    --radius-field: 1rem;
+    --radius-box: 1.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 1;
+    --noise: 0;
+}
+
+@theme static {
+    --font-sans: "Nunito Variable", ui-rounded, system-ui, sans-serif;
+
+    /* Action-type colours: one hue per kind of activity, used everywhere
+       (dashboard tiles, diary accents, calendar blocks). */
+    --color-eat: #f4a77e;
+    --color-sleep: #b7a6e0;
+    --color-temperature: #e88a9a;
+    --color-medication: #9db89a;
+    --color-other: #9cc9f5;
 }
 
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
@@ -11,7 +98,7 @@
 @source "../**/*.js";
 
 /* Theme toggle */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme=vrefos-night], [data-theme=vrefos-night] *));
 
 /* Larger base type for one-handed mobile use; everything downstream is
    rem-based (Tailwind, daisyUI, MaryUI) so the whole UI scales with this.
@@ -56,4 +143,53 @@ html {
    44px guideline; btn-sm is used for primary touch actions throughout. */
 .btn-sm {
     --size: 2.5rem;
+}
+
+/* Soft, warm card shadow and press feedback. */
+.card {
+    box-shadow: 0 2px 12px rgb(232 132 107 / 0.08);
+}
+
+.btn {
+    font-weight: 700;
+}
+
+.btn:active,
+.card.cursor-pointer:active {
+    transform: scale(0.97);
+}
+
+/* Type-coloured tinted chips/tiles: .type-chip-{eat|sleep|temperature|medication|other} */
+.type-chip-eat {
+    --type-color: var(--color-eat);
+    background-color: color-mix(in oklab, var(--color-eat) 22%, var(--color-base-100));
+}
+
+.type-chip-sleep {
+    --type-color: var(--color-sleep);
+    background-color: color-mix(in oklab, var(--color-sleep) 22%, var(--color-base-100));
+}
+
+.type-chip-temperature {
+    --type-color: var(--color-temperature);
+    background-color: color-mix(in oklab, var(--color-temperature) 22%, var(--color-base-100));
+}
+
+.type-chip-medication {
+    --type-color: var(--color-medication);
+    background-color: color-mix(in oklab, var(--color-medication) 22%, var(--color-base-100));
+}
+
+.type-chip-other {
+    --type-color: var(--color-other);
+    background-color: color-mix(in oklab, var(--color-other) 22%, var(--color-base-100));
+}
+
+.type-chip-eat, .type-chip-sleep, .type-chip-temperature, .type-chip-medication, .type-chip-other {
+    color: var(--color-base-content);
+}
+
+.type-chip-eat .type-icon, .type-chip-sleep .type-icon, .type-chip-temperature .type-icon,
+.type-chip-medication .type-icon, .type-chip-other .type-icon {
+    color: var(--type-color);
 }

@@ -31,6 +31,23 @@ class BabyActionType extends Model
         };
     }
 
+    /** Colour slug (matches the --color-{slug} tokens and .type-chip-{slug} classes). */
+    public static function slugFor(?string $name): string
+    {
+        return match (strtolower((string) $name)) {
+            'eat' => 'eat',
+            'sleep' => 'sleep',
+            'temperature' => 'temperature',
+            'medication' => 'medication',
+            default => 'other',
+        };
+    }
+
+    public function slug(): string
+    {
+        return self::slugFor($this->name);
+    }
+
     public function icon(): string
     {
         return self::iconFor($this->name);
