@@ -12,10 +12,13 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Create extends Component
 {
+    use Toast;
+
     public ?int $baby_id = null;
 
     public ?int $baby_action_type_id = null;
@@ -214,7 +217,7 @@ class Create extends Component
             ]);
         }
 
-        session()->flash('success', 'Baby action created successfully.');
+        $this->success('Baby action created successfully.');
 
         $this->redirect($this->returnUrl ?: route('baby_actions.show'), navigate: true);
     }

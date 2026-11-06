@@ -56,7 +56,6 @@
                     step="0.1"
                     required
                 />
-                @error('temperature') <span class="text-error text-sm">{{ $message }}</span> @enderror
             @endif
 
             @if ($this->isMedicationAction())
@@ -78,7 +77,6 @@
                         type="text"
                         placeholder="New medication name"
                     />
-                    @error('new_medication_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 @if (trim($new_medication_name) !== '')
@@ -100,7 +98,6 @@
                             type="text"
                             placeholder="New category name"
                         />
-                        @error('new_category_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
                     </div>
                 @endif
 
@@ -111,7 +108,6 @@
                     step="0.01"
                     placeholder="Optional"
                 />
-                @error('amount_ml') <span class="text-error text-sm">{{ $message }}</span> @enderror
             @endif
 
             <div x-data="{
@@ -138,7 +134,7 @@
 
             <x-slot:actions>
                 <x-mary-button label="Cancel" link="{{ route('baby_actions.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Save" class="btn-primary" />
+                <x-mary-button type="submit" label="Save" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>

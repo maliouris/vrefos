@@ -82,6 +82,21 @@ class BabyActionManagementTest extends TestCase
             ->assertRedirect(route('dashboard'));
     }
 
+    public function test_validation_errors_are_shown_once_per_field(): void
+    {
+        $baby = Baby::factory()->create();
+        $temperature = BabyActionType::factory()->create(['name' => 'Temperature', 'is_instant' => true]);
+
+        $html = Livewire::test(Create::class)
+            ->call('toggleBaby', $baby->id)
+            ->call('toggleActionType', $temperature->id)
+            ->call('save')
+            ->assertHasErrors(['temperature'])
+            ->html();
+
+        $this->assertSame(1, substr_count($html, 'The temperature field is required.'));
+    }
+
     public function test_create_persists_action_without_eat_detail_for_non_eat_type(): void
     {
         $baby = Baby::factory()->create();

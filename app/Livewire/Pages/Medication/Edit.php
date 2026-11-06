@@ -7,10 +7,13 @@ use App\Models\MedicationCategory;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Edit extends Component
 {
+    use Toast;
+
     public Medication $medication;
 
     public string $name = '';
@@ -58,7 +61,7 @@ class Edit extends Component
 
         $this->medication->categories()->sync($categoryIds->unique()->all());
 
-        session()->flash('success', 'Medication updated.');
+        $this->success('Medication updated.');
     }
 
     public function promptDelete(): void
@@ -79,7 +82,7 @@ class Edit extends Component
     public function confirmDelete(): void
     {
         $this->medication->delete();
-        session()->flash('success', 'Medication deleted.');
+        $this->success('Medication deleted.');
         $this->redirectRoute('medications.show', navigate: true);
     }
 

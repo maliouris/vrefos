@@ -5,10 +5,6 @@
 
     <x-notification-permission-banner :status="$permissionStatus" />
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <x-mary-card>
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-lg font-semibold">Messages</h3>
@@ -57,7 +53,7 @@
                     />
                 @endif
                 <x-mary-button label="Cancel" wire:click="$set('showModal', false)" />
-                <x-mary-button label="Save" type="submit" class="btn-primary" />
+                <x-mary-button label="Save" type="submit" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-modal>
@@ -69,7 +65,7 @@
                 <p class="mb-4">This will remove it from any plans it's attached to.</p>
                 <div class="flex gap-2">
                     <button class="btn btn-ghost flex-1" wire:click="closeDeleteModal">Cancel</button>
-                    <button class="btn btn-error flex-1" wire:click="confirmDelete">Delete</button>
+                    <button class="btn btn-error flex-1" wire:click="confirmDelete" wire:loading.attr="disabled" wire:target="confirmDelete">Delete</button>
                 </div>
             </div>
         </div>

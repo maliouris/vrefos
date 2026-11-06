@@ -7,10 +7,13 @@ use App\Models\MedicationCategory;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
+    use Toast;
+
     public ?int $deletingCategoryId = null;
 
     public string $deleteModalTitle = '';
@@ -53,7 +56,7 @@ class Index extends Component
         MedicationCategory::create(['name' => trim($this->newCategoryName)]);
 
         $this->showAddCategoryModal = false;
-        session()->flash('success', 'Category created.');
+        $this->success('Category created.');
     }
 
     public function deleteCategory(int $categoryId): void
@@ -75,7 +78,7 @@ class Index extends Component
 
         // No blocking reason, proceed with delete
         $category->delete();
-        session()->flash('success', 'Category deleted.');
+        $this->success('Category deleted.');
     }
 
     public function confirmCategoryDelete(int $categoryId): void
@@ -85,7 +88,7 @@ class Index extends Component
         $category->delete();
 
         $this->deletingCategoryId = null;
-        session()->flash('success', 'Category deleted.');
+        $this->success('Category deleted.');
     }
 
     public function closeCategoryModal(): void

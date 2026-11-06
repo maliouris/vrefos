@@ -3,10 +3,6 @@
         <h1 class="text-2xl font-bold">Medications</h1>
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <div class="space-y-6">
         {{-- Medications List --}}
         <x-mary-card>

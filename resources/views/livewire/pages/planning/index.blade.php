@@ -34,10 +34,6 @@
 
     <x-notification-permission-banner :status="$permissionStatus" />
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     @if ($babies->count() > 1)
         <div class="mb-4 flex flex-wrap gap-2">
             <x-mary-button
@@ -322,7 +318,7 @@
 
             <x-slot:actions>
                 <x-mary-button label="Cancel" wire:click="$set('showModal', false)" />
-                <x-mary-button label="Save" type="submit" class="btn-primary" />
+                <x-mary-button label="Save" type="submit" spinner="savePlan" wire:loading.attr="disabled" wire:target="savePlan" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-modal>
@@ -334,7 +330,7 @@
                 <p class="mb-4">This will delete the plan and cancel its scheduled reminders.</p>
                 <div class="flex gap-2">
                     <button class="btn btn-ghost flex-1" wire:click="closeDeleteModal">Cancel</button>
-                    <button class="btn btn-error flex-1" wire:click="deletePlan">Delete</button>
+                    <button class="btn btn-error flex-1" wire:click="deletePlan" wire:loading.attr="disabled" wire:target="deletePlan">Delete</button>
                 </div>
             </div>
         </div>

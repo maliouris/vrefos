@@ -4,10 +4,6 @@
         <x-mary-button label="Add Baby" icon="o-plus" link="{{ route('babies.create') }}" class="btn-primary" />
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <div class="space-y-4">
         @forelse ($babies as $baby)
             <x-mary-card

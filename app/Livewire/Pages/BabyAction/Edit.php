@@ -12,10 +12,13 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Edit extends Component
 {
+    use Toast;
+
     public BabyAction $babyAction;
 
     public ?int $baby_id = null;
@@ -203,7 +206,7 @@ class Edit extends Component
             $this->babyAction->medicationDetail()->delete();
         }
 
-        session()->flash('success', 'Baby action updated successfully.');
+        $this->success('Baby action updated successfully.');
     }
 
     private function resolveMedicationId(): int
@@ -231,7 +234,7 @@ class Edit extends Component
     {
         $this->babyAction->delete();
 
-        session()->flash('success', 'Baby action deleted.');
+        $this->success('Baby action deleted.');
 
         $this->redirectRoute('baby_actions.show', navigate: true);
     }

@@ -18,11 +18,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
     use HandlesNotificationPermission;
+    use Toast;
 
     public string $deviceTimezone = 'UTC';
 
@@ -437,7 +439,7 @@ class Index extends Component
         $this->resetForm();
         $this->refreshCalendar();
 
-        session()->flash('success', 'Plan saved.');
+        $this->success('Plan saved.');
     }
 
     public function toggleEnabled(int $planId, PlanScheduler $scheduler): void
@@ -474,7 +476,7 @@ class Index extends Component
         $this->resetForm();
         $this->refreshCalendar();
 
-        session()->flash('success', 'Plan deleted.');
+        $this->success('Plan deleted.');
     }
 
     /**

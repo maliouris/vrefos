@@ -6,10 +6,6 @@
         @endif
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <x-finished-undo :show="$lastFinishedId !== null" />
 
     @if (!$hasBabies)

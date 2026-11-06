@@ -7,10 +7,13 @@ use App\Models\MedicationCategory;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Create extends Component
 {
+    use Toast;
+
     public string $name = '';
 
     /** @var array<int> */
@@ -41,7 +44,7 @@ class Create extends Component
 
         $medication->categories()->sync($categoryIds->unique()->all());
 
-        session()->flash('success', 'Medication created.');
+        $this->success('Medication created.');
 
         $this->redirectRoute('medications.show', navigate: true);
     }

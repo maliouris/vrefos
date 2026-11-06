@@ -7,11 +7,13 @@ use App\Models\Notification;
 use App\Services\PlanScheduler;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Index extends Component
 {
     use HandlesNotificationPermission;
+    use Toast;
 
     public bool $showModal = false;
 
@@ -68,7 +70,7 @@ class Index extends Component
         $this->showModal = false;
         $this->resetForm();
 
-        session()->flash('success', 'Notification message saved.');
+        $this->success('Notification message saved.');
     }
 
     public function promptDelete(int $notificationId): void
@@ -98,7 +100,7 @@ class Index extends Component
         $this->closeDeleteModal();
         $this->resetForm();
 
-        session()->flash('success', 'Notification message deleted.');
+        $this->success('Notification message deleted.');
     }
 
     private function resetForm(): void

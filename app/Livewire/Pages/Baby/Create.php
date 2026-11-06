@@ -5,10 +5,13 @@ namespace App\Livewire\Pages\Baby;
 use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Create extends Component
 {
+    use Toast;
+
     public string $name = '';
 
     public string $birth_date = '';
@@ -25,7 +28,7 @@ class Create extends Component
             'birth_date' => $this->birth_date ?: null,
         ]);
 
-        session()->flash('success', 'Baby created successfully.');
+        $this->success('Baby created successfully.');
 
         $this->redirect(route('babies.show'), navigate: true);
     }

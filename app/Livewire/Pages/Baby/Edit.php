@@ -5,10 +5,13 @@ namespace App\Livewire\Pages\Baby;
 use App\Models\Baby;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Mary\Traits\Toast;
 
 #[Layout('layouts.app')]
 class Edit extends Component
 {
+    use Toast;
+
     public Baby $baby;
 
     public string $name = '';
@@ -36,7 +39,7 @@ class Edit extends Component
             'birth_date' => $this->birth_date ?: null,
         ]);
 
-        session()->flash('success', 'Baby updated successfully.');
+        $this->success('Baby updated successfully.');
     }
 
     public function promptDelete(): void
@@ -57,7 +60,7 @@ class Edit extends Component
 
         $this->baby->delete();
 
-        session()->flash('success', 'Baby deleted.');
+        $this->success('Baby deleted.');
 
         $this->redirectRoute('babies.show', navigate: true);
     }

@@ -10,10 +10,6 @@
         />
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <x-mary-card>
         <x-mary-form wire:submit="update">
             <div>
@@ -69,7 +65,6 @@
                     step="0.1"
                     required
                 />
-                @error('temperature') <span class="text-error text-sm">{{ $message }}</span> @enderror
             @endif
 
             @if ($this->isMedicationAction())
@@ -91,7 +86,6 @@
                         type="text"
                         placeholder="New medication name"
                     />
-                    @error('new_medication_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 @if (trim($new_medication_name) !== '')
@@ -113,7 +107,6 @@
                             type="text"
                             placeholder="New category name"
                         />
-                        @error('new_category_name') <span class="text-error text-sm">{{ $message }}</span> @enderror
                     </div>
                 @endif
 
@@ -124,7 +117,6 @@
                     step="0.01"
                     placeholder="Optional"
                 />
-                @error('amount_ml') <span class="text-error text-sm">{{ $message }}</span> @enderror
             @endif
 
             <div x-data="{
@@ -151,7 +143,7 @@
 
             <x-slot:actions>
                 <x-mary-button label="Back" link="{{ route('baby_actions.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Update" class="btn-primary" />
+                <x-mary-button type="submit" label="Update" spinner="update" wire:loading.attr="disabled" wire:target="update" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>

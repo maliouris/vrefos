@@ -30,7 +30,7 @@ window.initPlanningCalendar = ($wire, el) => {
 
     // Schedule-X v4 only accepts Temporal objects for event start/end (it throws
     // otherwise), while the server sends ISO-8601 strings with an offset.
-    const fetchEvents = async (range) => {
+    const loadEvents = async (range) => {
         // Month agenda's range is a Temporal.PlainDate ("2026-07-09"); the list
         // view's can be a Temporal.ZonedDateTime ("2026-07-09T00:00:00+00:00[UTC]").
         // Only the calendar date matters server-side, so normalize to the first
@@ -73,6 +73,31 @@ window.initPlanningCalendar = ($wire, el) => {
                 },
             };
         });
+    };
+
+    // Dims the calendar while events load and tells the user when loading fails.
+    const fetchEvents = async (range) => {
+        el.classList.add('opacity-60', 'transition-opacity');
+
+        try {
+            return await loadEvents(range);
+        } catch (error) {
+            window.toast?.({
+                toast: {
+                    type: 'error',
+                    title: 'Could not load the calendar',
+                    description: 'Pull to refresh or try again in a moment.',
+                    position: 'toast-top toast-end',
+                    icon: '',
+                    css: 'alert-error',
+                    timeout: 4000,
+                },
+            });
+
+            throw error;
+        } finally {
+            el.classList.remove('opacity-60');
+        }
     };
 
     // Re-query the visible range (timer, filter chips, plan edits).

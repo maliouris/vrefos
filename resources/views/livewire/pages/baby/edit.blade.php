@@ -9,10 +9,6 @@
         />
     </div>
 
-    @if (session('success'))
-        <x-mary-alert title="{{ session('success') }}" class="alert-success mb-4" />
-    @endif
-
     <x-mary-card>
         <x-mary-form wire:submit="update">
             <x-mary-input label="Name" wire:model="name" required />
@@ -20,7 +16,7 @@
 
             <x-slot:actions>
                 <x-mary-button label="Back" link="{{ route('babies.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Update" class="btn-primary" />
+                <x-mary-button type="submit" label="Update" spinner="update" wire:loading.attr="disabled" wire:target="update" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>
@@ -35,7 +31,7 @@
 
                 <div class="flex gap-2">
                     <button class="btn btn-ghost flex-1" wire:click="$set('showDeleteModal', false)">Cancel</button>
-                    <button class="btn btn-error flex-1" wire:click="confirmDelete">Delete</button>
+                    <button class="btn btn-error flex-1" wire:click="confirmDelete" wire:loading.attr="disabled" wire:target="confirmDelete">Delete</button>
                 </div>
             </div>
         </div>
