@@ -2,15 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Enums\NotifyFrom;
 use App\Livewire\Pages\Baby\Create;
 use App\Livewire\Pages\Baby\Edit;
 use App\Livewire\Pages\Baby\Index;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
-use App\Models\NotificationSetting;
-use App\Services\LocalNotificationScheduler;
+use App\Services\PlanScheduler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -83,23 +81,13 @@ class BabyManagementTest extends TestCase
         $baby = Baby::factory()->create();
         $type = BabyActionType::factory()->create(['name' => 'Eat']);
 
-        NotificationSetting::create([
-            'baby_action_type_id' => $type->id,
-            'enabled' => true,
-            'notify_after_minutes' => 180,
-            'notify_from' => NotifyFrom::StartedAt,
-            'title' => 'Time to eat!',
-        ]);
-
         $action = BabyAction::factory()->for($baby)->create([
             'baby_action_type_id' => $type->id,
             'started_at' => now()->subHour(),
             'finished_at' => null,
         ]);
 
-        $this->assertNotNull($action->fresh()->notification_scheduled_at);
-
-        $scheduler = $this->spy(LocalNotificationScheduler::class);
+        $scheduler = $this->spy(PlanScheduler::class);
 
         Livewire::test(Edit::class, ['baby' => $baby])
             ->call('promptDelete')
@@ -113,7 +101,7 @@ class BabyManagementTest extends TestCase
 
         // Proves the actions were deleted through Eloquent (observer path),
         // not the DB cascade, which would leave OS notifications scheduled.
-        $scheduler->shouldHaveReceived('cancelFor')->once();
+        $scheduler->shouldHaveReceived('reanchorForAction')->once();
     }
 
     public function test_edit_can_clear_birth_date(): void

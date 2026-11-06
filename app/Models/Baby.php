@@ -25,9 +25,9 @@ class Baby extends Model
         return $this->hasMany(BabyAction::class);
     }
 
-    public function notificationSettings(): BelongsToMany
+    public function plans(): BelongsToMany
     {
-        return $this->belongsToMany(NotificationSetting::class);
+        return $this->belongsToMany(Plan::class);
     }
 
     public function ageLabel(): ?string

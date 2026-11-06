@@ -2,11 +2,8 @@
 
 namespace App\Livewire\Pages\Medication;
 
-use App\Models\BabyActionType;
 use App\Models\Medication;
 use App\Models\MedicationCategory;
-use App\Models\NotificationSetting;
-use App\Services\LocalNotificationScheduler;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -59,28 +56,9 @@ class Index extends Component
         session()->flash('success', 'Category created.');
     }
 
-    public function deleteCategory(int $categoryId, LocalNotificationScheduler $scheduler): void
+    public function deleteCategory(int $categoryId): void
     {
         $category = MedicationCategory::findOrFail($categoryId);
-
-        // Check if category is used by notification rules
-        $rulesUsingCategory = NotificationSetting::whereHas('medicationCategories', fn ($q) => $q->where('medication_category_id', $categoryId))
-            ->with('babyActionType:id,name')
-            ->get(['id', 'baby_action_type_id', 'title', 'notify_after_minutes']);
-
-        if ($rulesUsingCategory->isNotEmpty()) {
-            $this->deleteModalType = 'blocked';
-            $this->deleteModalTitle = 'Cannot delete category';
-            $this->deleteModalMessage = "This category is used by {$rulesUsingCategory->count()} notification rule(s). Change or delete those rules first.";
-            $this->blockingRules = $rulesUsingCategory->map(fn ($r) => [
-                'title' => $r->title,
-                'type' => $r->babyActionType->name,
-                'delay' => "{$r->notify_after_minutes} min",
-            ])->all();
-            $this->deletingCategoryId = $categoryId;
-
-            return;
-        }
 
         // Check if category is used by medications
         $medicationsUsingCategory = $category->medications()->get(['id', 'name']);
@@ -105,9 +83,6 @@ class Index extends Component
         $category = MedicationCategory::findOrFail($categoryId);
         $category->medications()->detach();
         $category->delete();
-
-        $scheduler = app(LocalNotificationScheduler::class);
-        $scheduler->rescheduleAllForType(BabyActionType::where('name', 'Medication')->firstOrFail());
 
         $this->deletingCategoryId = null;
         session()->flash('success', 'Category deleted.');

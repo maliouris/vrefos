@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Pages\Dashboard\Index as DashboardIndex;
-use App\Livewire\Pages\NotificationSettings\Index;
+use App\Livewire\Pages\Planning\Index;
 use App\Services\NotificationPermission;
 use Ikromjon\LocalNotifications\Enums\PermissionStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;

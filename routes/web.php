@@ -10,7 +10,8 @@ use App\Livewire\Pages\Dashboard\Index as Dashboard;
 use App\Livewire\Pages\Medication\Create as MedicationCreate;
 use App\Livewire\Pages\Medication\Edit as MedicationEdit;
 use App\Livewire\Pages\Medication\Index as MedicationIndex;
-use App\Livewire\Pages\NotificationSettings\Index;
+use App\Livewire\Pages\Notification\Index as NotificationIndex;
+use App\Livewire\Pages\Planning\Index as PlanningIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', Dashboard::class)->name('dashboard');
@@ -23,10 +24,11 @@ Route::get('/baby_actions', BabyActionIndex::class)->name('baby_actions.show');
 Route::get('/baby_actions/add', BabyActionCreate::class)->name('baby_actions.create');
 Route::get('/baby_actions/{babyAction}/edit', BabyActionEdit::class)->name('baby_actions.edit');
 
-Route::get('/notification-settings', Index::class)->name('notification-settings.edit');
-
 Route::get('/medications', MedicationIndex::class)->name('medications.show');
 Route::get('/medications/add', MedicationCreate::class)->name('medications.create');
 Route::get('/medications/{medication}/edit', MedicationEdit::class)->name('medications.edit');
+
+Route::get('/planning', PlanningIndex::class)->name('planning.show');
+Route::get('/notifications', NotificationIndex::class)->name('notifications.show');
 
 Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));

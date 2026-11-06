@@ -9,7 +9,6 @@ use App\Models\BabyAction;
 use App\Models\BabyActionType;
 use App\Models\Medication;
 use App\Models\MedicationCategory;
-use App\Services\LocalNotificationScheduler;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -164,7 +163,7 @@ class Edit extends Component
         }
     }
 
-    public function update(LocalNotificationScheduler $scheduler): void
+    public function update(): void
     {
         $this->validate([
             'baby_id' => 'required|exists:babies,id',
@@ -222,10 +221,6 @@ class Edit extends Component
             );
         } else {
             $this->babyAction->medicationDetail()->delete();
-        }
-
-        if ($this->isTemperatureAction() || $this->isMedicationAction()) {
-            $scheduler->rescheduleFor($this->babyAction->refresh());
         }
 
         session()->flash('success', 'Baby action updated successfully.');

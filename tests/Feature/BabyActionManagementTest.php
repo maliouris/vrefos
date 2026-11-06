@@ -4,14 +4,13 @@ namespace Tests\Feature;
 
 use App\Enums\BreastSide;
 use App\Enums\FoodType;
-use App\Enums\NotifyFrom;
 use App\Livewire\Pages\BabyAction\Create;
 use App\Livewire\Pages\BabyAction\Edit;
 use App\Livewire\Pages\BabyAction\Index;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
-use App\Models\NotificationSetting;
+use App\Services\PlanScheduler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -173,14 +172,6 @@ class BabyActionManagementTest extends TestCase
         $baby = Baby::factory()->create();
         $eat = BabyActionType::factory()->create(['name' => 'Eat']);
 
-        NotificationSetting::create([
-            'baby_action_type_id' => $eat->id,
-            'enabled' => true,
-            'notify_after_minutes' => 180,
-            'notify_from' => NotifyFrom::StartedAt,
-            'title' => 'Time to eat!',
-        ]);
-
         $action = BabyAction::factory()->for($baby)->create([
             'baby_action_type_id' => $eat->id,
             'started_at' => now()->subHour(),
@@ -188,12 +179,13 @@ class BabyActionManagementTest extends TestCase
         ]);
         $detail = $action->eatDetail()->create(['food_type' => FoodType::Formula->value]);
 
-        $this->assertNotNull($action->fresh()->notification_scheduled_at);
+        $scheduler = $this->spy(PlanScheduler::class);
 
         $action->delete();
 
         $this->assertDatabaseMissing('baby_actions', ['id' => $action->id]);
         $this->assertDatabaseMissing('baby_action_eat_details', ['id' => $detail->id]);
+        $scheduler->shouldHaveReceived('reanchorForAction')->once();
     }
 
     public function test_finish_now_sets_finished_at_to_current_time(): void

@@ -13,7 +13,13 @@
         "vite": "^8.3.6"
     },
     "dependencies": {
-        "axios": "^1.21.0"
+        "@schedule-x/calendar": "^4.6.1",
+        "@schedule-x/calendar-controls": "^4.6.1",
+        "@schedule-x/current-time": "^4.6.1",
+        "@schedule-x/events-service": "^4.6.1",
+        "@schedule-x/theme-default": "^4.6.1",
+        "axios": "^1.21.0",
+        "temporal-polyfill": "^0.3.0"
     },
     "overrides": {
         "picomatch": "^4.0.4"

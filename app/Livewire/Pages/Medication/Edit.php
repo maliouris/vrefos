@@ -4,7 +4,6 @@ namespace App\Livewire\Pages\Medication;
 
 use App\Models\Medication;
 use App\Models\MedicationCategory;
-use App\Models\NotificationSetting;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -64,27 +63,6 @@ class Edit extends Component
 
     public function promptDelete(): void
     {
-        // Check if rules reference this medication (either as target or exclusion)
-        $rulesUsingMedication = NotificationSetting::where(function ($q) {
-            $q->whereHas('targetMedications', fn ($sq) => $sq->where('medication_id', $this->medication->id))
-                ->orWhereHas('excludedMedications', fn ($sq) => $sq->where('medication_id', $this->medication->id));
-        })
-            ->with('babyActionType:id,name')
-            ->get(['id', 'baby_action_type_id', 'title', 'notify_after_minutes']);
-
-        if ($rulesUsingMedication->isNotEmpty()) {
-            $this->deleteModalType = 'blocked';
-            $this->deleteBlockReason = "This medication is referenced by {$rulesUsingMedication->count()} notification rule(s). Change or delete those rules first.";
-            $this->blockingRules = $rulesUsingMedication->map(fn ($r) => [
-                'title' => $r->title,
-                'type' => $r->babyActionType->name,
-                'delay' => "{$r->notify_after_minutes} min",
-            ])->all();
-            $this->showDeleteModal = true;
-
-            return;
-        }
-
         // Check if actions reference this medication (FK restrict will block, but warn anyway)
         if ($this->medication->actionDetails()->exists()) {
             $this->deleteModalType = 'blocked';

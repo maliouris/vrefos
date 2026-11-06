@@ -29,10 +29,11 @@
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200">
             <x-mary-menu activate-by-route style="padding-top: env(safe-area-inset-top)">
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="{{ route('dashboard') }}" exact />
+                <x-mary-menu-item title="Planning" icon="o-calendar-days" link="{{ route('planning.show') }}" />
                 <x-mary-menu-item title="Babies" icon="o-cake" link="{{ route('babies.show') }}" />
                 <x-mary-menu-item title="Baby Actions" icon="o-clock" link="{{ route('baby_actions.show') }}" />
                 <x-mary-menu-item title="Medications" icon="o-beaker" link="{{ route('medications.show') }}" />
-                <x-mary-menu-item title="Notifications" icon="o-bell" link="{{ route('notification-settings.edit') }}" />
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="{{ route('notifications.show') }}" />
             </x-mary-menu>
         </x-slot:sidebar>
 

@@ -24,8 +24,8 @@ class BabyActionType extends Model
         return $this->hasMany(BabyAction::class);
     }
 
-    public function notificationSettings(): HasMany
+    public function plans(): HasMany
     {
-        return $this->hasMany(NotificationSetting::class);
+        return $this->hasMany(Plan::class);
     }
 }

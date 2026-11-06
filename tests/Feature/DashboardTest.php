@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Enums\NotifyFrom;
 use App\Livewire\Pages\Dashboard\Index;
 use App\Models\Baby;
 use App\Models\BabyAction;
 use App\Models\BabyActionType;
-use App\Models\NotificationSetting;
+use App\Models\Plan;
+use App\Models\PlanVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -92,13 +92,8 @@ class DashboardTest extends TestCase
     {
         $baby = Baby::factory()->create();
         $type = BabyActionType::factory()->create();
-        NotificationSetting::factory()->create([
-            'baby_action_type_id' => $type->id,
-            'enabled' => true,
-            'notify_after_minutes' => 180,
-            'notify_from' => NotifyFrom::StartedAt,
-            'title' => 'Time to eat!',
-        ]);
+        $plan = Plan::factory()->create(['baby_action_type_id' => $type->id, 'all_children' => true]);
+        PlanVersion::factory()->for($plan)->create();
 
         // Observer schedules the reminder on create, setting notification_scheduled_at.
         BabyAction::factory()->for($baby)->create([

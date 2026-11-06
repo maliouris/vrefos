@@ -2,8 +2,7 @@
 
 namespace App\Providers;
 
-use App\Models\BabyAction;
-use App\Services\LocalNotificationScheduler;
+use App\Services\PlanScheduler;
 use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
@@ -33,11 +32,7 @@ class NativeServiceProvider extends ServiceProvider
         // start for the OS to show the dialog. It is triggered post-render
         // via wire:init on the permission banner (HandlesNotificationPermission).
         if (! Cache::has('notifications_resynced_at')) {
-            $scheduler = $this->app->make(LocalNotificationScheduler::class);
-
-            BabyAction::whereNotNull('notification_scheduled_at')
-                ->with(['baby', 'babyActionType'])
-                ->each(fn (BabyAction $action) => $scheduler->rescheduleFor($action));
+            $this->app->make(PlanScheduler::class)->rescheduleAll();
 
             Cache::put('notifications_resynced_at', now(), 300);
         }

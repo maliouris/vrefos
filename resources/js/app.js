@@ -1,5 +1,7 @@
 // App initialization
 
+import './planning-calendar.js';
+
 // Datetime values are stored as true UTC instants but entered/displayed in the
 // device's local timezone. The webview knows the local offset, so all conversion
 // happens here. The "UTC string" form is `YYYY-MM-DD HH:mm` (Laravel parses it as

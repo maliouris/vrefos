@@ -9,7 +9,6 @@ use App\Models\BabyAction;
 use App\Models\BabyActionType;
 use App\Models\Medication;
 use App\Models\MedicationCategory;
-use App\Services\LocalNotificationScheduler;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -155,7 +154,7 @@ class Create extends Component
         }
     }
 
-    public function save(LocalNotificationScheduler $scheduler): void
+    public function save(): void
     {
         $this->validate([
             'baby_id' => 'required|exists:babies,id',
@@ -200,12 +199,6 @@ class Create extends Component
                 'medication_id' => $this->resolveMedicationId(),
                 'amount_ml' => $this->amount_ml ?: null,
             ]);
-        }
-
-        // The observer scheduled on `created`, before the detail rows above existed,
-        // so condition-bearing types must be rescheduled with the details in place.
-        if ($this->isTemperatureAction() || $this->isMedicationAction()) {
-            $scheduler->rescheduleFor($action->refresh());
         }
 
         session()->flash('success', 'Baby action created successfully.');
