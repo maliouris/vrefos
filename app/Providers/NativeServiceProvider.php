@@ -7,8 +7,6 @@ use App\Services\LocalNotificationScheduler;
 use Ikromjon\LocalNotifications\LocalNotificationsServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
-use Native\Mobile\Providers\DeviceServiceProvider;
-use Native\Mobile\Providers\SystemServiceProvider;
 use Vrefos\NativeAssets\NativeAssetsServiceProvider;
 
 class NativeServiceProvider extends ServiceProvider
@@ -59,8 +57,6 @@ class NativeServiceProvider extends ServiceProvider
         return [
             LocalNotificationsServiceProvider::class,
             NativeAssetsServiceProvider::class,
-            SystemServiceProvider::class,
-            DeviceServiceProvider::class,
 
         ];
     }
