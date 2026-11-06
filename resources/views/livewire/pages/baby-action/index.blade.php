@@ -48,7 +48,7 @@
                             <span class="text-base-content/60 truncate">· {{ $action->baby?->name }}</span>
                         </div>
                         @if ($action->eatDetail?->food_type)
-                            <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}{{ $action->eatDetail->breast_side ? ' - ' . $action->eatDetail->breast_side->label() : '' }}</span>
+                            <span class="badge badge-info shrink-0">{{ $action->eatDetail->food_type->label() }}</span>
                         @elseif ($action->temperatureDetail)
                             <span class="badge {{ $action->temperatureDetail->feverLevel()->badgeClass() }} shrink-0">{{ $action->temperatureDetail->temperature }}°C · {{ $action->temperatureDetail->feverLevel()->label() }}</span>
                         @elseif ($action->medicationDetail)

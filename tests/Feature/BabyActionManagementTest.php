@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\BreastSide;
 use App\Enums\FoodType;
 use App\Livewire\Pages\BabyAction\Create;
 use App\Livewire\Pages\BabyAction\Edit;
@@ -53,7 +52,6 @@ class BabyActionManagementTest extends TestCase
         $action = BabyAction::firstWhere('baby_id', $baby->id);
         $this->assertNotNull($action->eatDetail);
         $this->assertEquals(FoodType::Formula, $action->eatDetail->food_type);
-        $this->assertNull($action->eatDetail->breast_side);
     }
 
     public function test_create_eat_action_without_food_type_does_not_create_eat_detail(): void
@@ -88,20 +86,6 @@ class BabyActionManagementTest extends TestCase
 
         $action = BabyAction::firstWhere('baby_id', $baby->id);
         $this->assertNull($action->eatDetail);
-    }
-
-    public function test_breast_side_is_cleared_when_food_type_is_not_breast_milk(): void
-    {
-        $baby = Baby::factory()->create();
-        $eat = BabyActionType::factory()->create(['name' => 'Eat']);
-
-        Livewire::test(Create::class)
-            ->call('toggleBaby', $baby->id)
-            ->call('toggleActionType', $eat->id)
-            ->call('toggleFoodType', FoodType::BreastMilk->value)
-            ->call('toggleBreastSide', BreastSide::Left->value)
-            ->call('toggleFoodType', FoodType::Formula->value)
-            ->assertSet('breast_side', null);
     }
 
     public function test_create_validates_finished_at_is_after_started_at(): void
@@ -220,16 +204,14 @@ class BabyActionManagementTest extends TestCase
             'finished_at' => null,
         ]);
         $ongoing->eatDetail()->create([
-            'food_type' => FoodType::BreastMilk->value,
-            'breast_side' => BreastSide::Left->value,
+            'food_type' => FoodType::BreastMilkLeft->value,
         ]);
 
         Livewire::test(Index::class)
             ->assertSee('Maria')
             ->assertSee('Eat')
             ->assertSeeHtml("Livewire.navigate('".route('baby_actions.edit', $ongoing)."')")
-            ->assertSee(FoodType::BreastMilk->label())
-            ->assertSee(BreastSide::Left->label())
+            ->assertSee(FoodType::BreastMilkLeft->label())
             ->assertSee('Finish now')
             ->assertDontSee('Total:')
             ->assertDontSee('Edit')

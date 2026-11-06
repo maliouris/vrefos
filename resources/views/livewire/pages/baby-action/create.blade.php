@@ -46,21 +46,6 @@
                     @error('food_type') <span class="text-error text-sm">{{ $message }}</span> @enderror
                 </div>
 
-                @if ($food_type === \App\Enums\FoodType::BreastMilk->value)
-                    <div>
-                        <label class="label"><span class="label-text">Breast Side</span></label>
-                        <div class="flex flex-wrap gap-2">
-                            @foreach ($breastSides as $bs)
-                                <x-mary-button
-                                    label="{{ $bs['name'] }}"
-                                    wire:click="toggleBreastSide('{{ $bs['id'] }}')"
-                                    class="btn-md {{ $breast_side === $bs['id'] ? 'btn-primary' : 'btn-outline' }}"
-                                />
-                            @endforeach
-                        </div>
-                        @error('breast_side') <span class="text-error text-sm">{{ $message }}</span> @enderror
-                    </div>
-                @endif
             @endif
 
             @if ($this->isTemperatureAction())

@@ -4,7 +4,8 @@ namespace App\Enums;
 
 enum FoodType: string
 {
-    case BreastMilk = 'breast_milk';
+    case BreastMilkLeft = 'breast_milk_left';
+    case BreastMilkRight = 'breast_milk_right';
     case Formula = 'formula';
     case Fruits = 'fruits';
     case Vegetables = 'vegetables';
@@ -16,7 +17,8 @@ enum FoodType: string
     public function label(): string
     {
         return match ($this) {
-            self::BreastMilk => 'Breast Milk',
+            self::BreastMilkLeft => 'Breast Milk (Left)',
+            self::BreastMilkRight => 'Breast Milk (Right)',
             self::Formula => 'Formula',
             self::Fruits => 'Fruits',
             self::Vegetables => 'Vegetables',

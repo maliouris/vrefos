@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\BreastSide;
 use App\Enums\FeverLevel;
 use App\Enums\FoodType;
 use App\Livewire\Pages\Planning\Index;
@@ -231,7 +230,7 @@ class PlanningCalendarTest extends TestCase
             'started_at' => '2026-01-15 10:00:00',
             'finished_at' => '2026-01-15 10:25:00',
         ]);
-        BabyActionEatDetail::create(['baby_action_id' => $action->id, 'food_type' => FoodType::BreastMilk, 'breast_side' => BreastSide::Left]);
+        BabyActionEatDetail::create(['baby_action_id' => $action->id, 'food_type' => FoodType::BreastMilkLeft]);
 
         Livewire::test(Index::class)
             ->set('deviceTimezone', 'Europe/Athens')
@@ -240,7 +239,7 @@ class PlanningCalendarTest extends TestCase
             ->assertSet('selectedEvent.kind', 'action')
             ->assertSet('selectedEvent.title', '✓ Eat — Theo')
             ->assertSet('selectedEvent.when', 'Thu 15 Jan · 12:00 – 12:25')
-            ->assertSet('selectedEvent.lines', ['Theo', 'Breast Milk · Left'])
+            ->assertSet('selectedEvent.lines', ['Theo', 'Breast Milk (Left)'])
             ->assertSet('selectedEvent.url', route('baby_actions.edit', $action))
             ->assertSee('Open action');
     }

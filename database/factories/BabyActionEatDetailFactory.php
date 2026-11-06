@@ -20,7 +20,6 @@ class BabyActionEatDetailFactory extends Factory
         return [
             'baby_action_id' => BabyAction::factory(),
             'food_type' => fake()->randomElement(FoodType::cases())->value,
-            'breast_side' => null,
         ];
     }
 }

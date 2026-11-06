@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\BabyAction;
 
-use App\Enums\BreastSide;
 use App\Enums\FoodType;
 use App\Models\Baby;
 use App\Models\BabyAction;
@@ -29,8 +28,6 @@ class Edit extends Component
 
     public ?string $food_type = null;
 
-    public ?string $breast_side = null;
-
     public ?string $temperature = null;
 
     public ?int $medication_id = null;
@@ -52,7 +49,6 @@ class Edit extends Component
         $this->started_at = $babyAction->started_at?->format('Y-m-d\TH:i') ?? '';
         $this->finished_at = $babyAction->finished_at?->format('Y-m-d\TH:i') ?? '';
         $this->food_type = $babyAction->eatDetail?->food_type?->value;
-        $this->breast_side = $babyAction->eatDetail?->breast_side?->value;
         $this->temperature = $babyAction->temperatureDetail?->temperature;
         $this->medication_id = $babyAction->medicationDetail?->medication_id;
         $this->amount_ml = $babyAction->medicationDetail?->amount_ml;
@@ -98,12 +94,6 @@ class Edit extends Component
     public function toggleFoodType(string $foodType): void
     {
         $this->food_type = $this->food_type === $foodType ? null : $foodType;
-        $this->updatedFoodType();
-    }
-
-    public function toggleBreastSide(string $breastSide): void
-    {
-        $this->breast_side = $this->breast_side === $breastSide ? null : $breastSide;
     }
 
     public function toggleMedication(int $medicationId): void
@@ -129,7 +119,6 @@ class Edit extends Component
 
         if (! $this->isEatAction()) {
             $this->food_type = null;
-            $this->breast_side = null;
         }
 
         if (! $this->isTemperatureAction()) {
@@ -149,13 +138,6 @@ class Edit extends Component
         }
     }
 
-    public function updatedFoodType(): void
-    {
-        if ($this->food_type !== FoodType::BreastMilk->value) {
-            $this->breast_side = null;
-        }
-    }
-
     public function updatedNewMedicationName(): void
     {
         if (trim($this->new_medication_name) !== '') {
@@ -171,7 +153,6 @@ class Edit extends Component
             'started_at' => 'required|date',
             'finished_at' => 'nullable|date|after_or_equal:started_at',
             'food_type' => ['nullable', Rule::enum(FoodType::class)],
-            'breast_side' => ['nullable', Rule::enum(BreastSide::class)],
             'temperature' => [Rule::requiredIf($this->isTemperatureAction()), 'nullable', 'numeric', 'between:30,45'],
             'medication_id' => [
                 Rule::requiredIf($this->isMedicationAction() && trim($this->new_medication_name) === ''),
@@ -195,7 +176,6 @@ class Edit extends Component
                 ['baby_action_id' => $this->babyAction->id],
                 [
                     'food_type' => $this->food_type,
-                    'breast_side' => $this->breast_side,
                 ]
             );
         } else {
@@ -265,14 +245,10 @@ class Edit extends Component
             ->map(fn ($case) => ['id' => $case->value, 'name' => $case->label()])
             ->all();
 
-        $breastSides = collect(BreastSide::cases())
-            ->map(fn ($case) => ['id' => $case->value, 'name' => $case->label()])
-            ->all();
-
         $medications = Medication::orderBy('name')->get()->map(fn ($m) => ['id' => $m->id, 'name' => $m->name])->all();
 
         $medicationCategories = MedicationCategory::orderBy('name')->get()->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all();
 
-        return view('livewire.pages.baby-action.edit', compact('babies', 'actionTypes', 'foodTypes', 'breastSides', 'medications', 'medicationCategories'));
+        return view('livewire.pages.baby-action.edit', compact('babies', 'actionTypes', 'foodTypes', 'medications', 'medicationCategories'));
     }
 }

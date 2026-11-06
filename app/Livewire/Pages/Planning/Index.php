@@ -167,7 +167,7 @@ class Index extends Component
             $lines = [$action->baby->name];
 
             if ($action->eatDetail?->food_type) {
-                $lines[] = $action->eatDetail->food_type->label().($action->eatDetail->breast_side ? ' · '.$action->eatDetail->breast_side->label() : '');
+                $lines[] = $action->eatDetail->food_type->label();
             }
 
             if ($action->temperatureDetail) {
