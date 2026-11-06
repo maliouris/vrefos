@@ -38,38 +38,19 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Back" link="{{ route('medications.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Update" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
+                <x-mary-button label="Cancel" link="{{ route('medications.show') }}" class="btn-ghost" />
+                <x-mary-button type="submit" label="Save" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>
 
-    {{-- Delete Modal --}}
-    @if ($showDeleteModal)
-        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.set('showDeleteModal', false)">
-            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-                <h3 class="text-lg font-bold mb-4">{{ $deleteModalType === 'blocked' ? 'Cannot delete medication' : 'Delete medication?' }}</h3>
-
-                <p class="mb-4">{{ $deleteBlockReason }}</p>
-
-                @if ($deleteModalType === 'blocked')
-                    <div class="mb-4 bg-base-200 p-3 rounded text-sm">
-                        <div class="font-semibold mb-2">Rules referencing this medication:</div>
-                        <ul class="space-y-1">
-                            @foreach ($blockingRules ?? [] as $rule)
-                                <li>• {{ $rule['title'] }} ({{ $rule['type'] }}, {{ $rule['delay'] }})</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-ghost flex-1" wire:click="$set('showDeleteModal', false)">Close</button>
-                    </div>
-                @else
-                    <div class="flex gap-2">
-                        <button class="btn btn-ghost flex-1" wire:click="$set('showDeleteModal', false)">Cancel</button>
-                        <button class="btn btn-error flex-1" wire:click="confirmDelete" wire:loading.attr="disabled" wire:target="confirmDelete">Delete</button>
-                    </div>
-                @endif
+    <x-confirm-delete
+        :show="$showDeleteModal"
+        :title="$deleteModalType === 'blocked' ? 'Cannot delete medication' : 'Delete medication?'"
+        :message="$deleteBlockReason"
+        :blocked="$deleteModalType === 'blocked'"
+        confirm="confirmDelete"
+    />
             </div>
         </div>
     @endif

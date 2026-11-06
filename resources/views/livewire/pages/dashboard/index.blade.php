@@ -1,13 +1,7 @@
 @php
     use Carbon\CarbonInterface;
 
-    $typeIcon = fn (?string $name): string => match (strtolower((string) $name)) {
-        'eat' => 'o-cake',
-        'sleep' => 'o-moon',
-        'temperature' => 'o-fire',
-        'medication' => 'o-beaker',
-        default => 'o-clock',
-    };
+    $typeIcon = \App\Models\BabyActionType::iconFor(...);
 
     $humanDiff = fn ($date): string => $date->diffForHumans([
         'parts' => 2,

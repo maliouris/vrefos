@@ -29,8 +29,6 @@ class Edit extends Component
 
     public ?string $deleteBlockReason = null;
 
-    public ?array $blockingRules = null;
-
     public function mount(Medication $medication): void
     {
         $this->medication = $medication;

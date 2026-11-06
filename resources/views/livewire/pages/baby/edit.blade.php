@@ -15,25 +15,16 @@
             <x-mary-datepicker label="Birth Date" wire:model="birth_date" icon="o-calendar" />
 
             <x-slot:actions>
-                <x-mary-button label="Back" link="{{ route('babies.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Update" spinner="update" wire:loading.attr="disabled" wire:target="update" class="btn-primary" />
+                <x-mary-button label="Cancel" link="{{ route('babies.show') }}" class="btn-ghost" />
+                <x-mary-button type="submit" label="Save" spinner="update" wire:loading.attr="disabled" wire:target="update" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>
 
-    {{-- Delete Modal --}}
-    @if ($showDeleteModal)
-        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.set('showDeleteModal', false)">
-            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-                <h3 class="text-lg font-bold mb-4">Delete {{ $baby->name }}?</h3>
-
-                <p class="mb-4">This will delete {{ $baby->name }} and all of their recorded actions, and cancel any scheduled reminders. This cannot be undone.</p>
-
-                <div class="flex gap-2">
-                    <button class="btn btn-ghost flex-1" wire:click="$set('showDeleteModal', false)">Cancel</button>
-                    <button class="btn btn-error flex-1" wire:click="confirmDelete" wire:loading.attr="disabled" wire:target="confirmDelete">Delete</button>
-                </div>
-            </div>
-        </div>
-    @endif
+    <x-confirm-delete
+        :show="$showDeleteModal"
+        title="Delete {{ $baby->name }}?"
+        message="This will delete {{ $baby->name }} and all of their recorded actions, and cancel any scheduled reminders. This cannot be undone."
+        confirm="confirmDelete"
+    />
 </div>

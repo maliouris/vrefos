@@ -20,9 +20,7 @@ class Index extends Component
 
     public string $deleteModalMessage = '';
 
-    public string $deleteModalType = 'confirm'; // 'confirm', 'blocked', 'warn'
-
-    public ?array $blockingRules = null;
+    public string $deleteModalType = 'confirm'; // 'confirm', 'warn'
 
     public ?array $uncategorizedMedications = null;
 
@@ -76,9 +74,12 @@ class Index extends Component
             return;
         }
 
-        // No blocking reason, proceed with delete
-        $category->delete();
-        $this->success('Category deleted.');
+        // Unused category: still ask before deleting, like every other delete.
+        $this->deleteModalType = 'confirm';
+        $this->deleteModalTitle = 'Delete category?';
+        $this->deleteModalMessage = "\"{$category->name}\" will be removed.";
+        $this->uncategorizedMedications = null;
+        $this->deletingCategoryId = $categoryId;
     }
 
     public function confirmCategoryDelete(int $categoryId): void
@@ -94,7 +95,6 @@ class Index extends Component
     public function closeCategoryModal(): void
     {
         $this->deletingCategoryId = null;
-        $this->blockingRules = null;
         $this->uncategorizedMedications = null;
     }
 

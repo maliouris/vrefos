@@ -23,7 +23,7 @@
 
                 @if ($baby->birth_date)
                     <div class="text-base text-base-content/60">
-                        Born: {{ $baby->birth_date->format('d/m/Y') }}
+                        Born: {{ $baby->birth_date->format('j M Y') }}
                     </div>
                 @endif
 

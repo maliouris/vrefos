@@ -19,6 +19,23 @@ class BabyActionType extends Model
         'is_instant' => 'boolean',
     ];
 
+    /** Heroicon used for this action type everywhere in the UI. */
+    public static function iconFor(?string $name): string
+    {
+        return match (strtolower((string) $name)) {
+            'eat' => 'o-cake',
+            'sleep' => 'o-moon',
+            'temperature' => 'o-fire',
+            'medication' => 'o-beaker',
+            default => 'o-clock',
+        };
+    }
+
+    public function icon(): string
+    {
+        return self::iconFor($this->name);
+    }
+
     public function babyActions(): HasMany
     {
         return $this->hasMany(BabyAction::class);

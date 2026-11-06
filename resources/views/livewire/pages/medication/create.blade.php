@@ -32,8 +32,8 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Back" link="{{ route('medications.show') }}" class="btn-ghost" />
-                <x-mary-button type="submit" label="Create" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
+                <x-mary-button label="Cancel" link="{{ route('medications.show') }}" class="btn-ghost" />
+                <x-mary-button type="submit" label="Save" spinner="save" wire:loading.attr="disabled" wire:target="save" class="btn-primary" />
             </x-slot:actions>
         </x-mary-form>
     </x-mary-card>

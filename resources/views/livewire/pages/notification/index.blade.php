@@ -58,16 +58,11 @@
         </x-mary-form>
     </x-mary-modal>
 
-    @if ($showDeleteModal)
-        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.closeDeleteModal()">
-            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-                <h3 class="text-lg font-bold mb-4">Delete message?</h3>
-                <p class="mb-4">This will remove it from any plans it's attached to.</p>
-                <div class="flex gap-2">
-                    <button class="btn btn-ghost flex-1" wire:click="closeDeleteModal">Cancel</button>
-                    <button class="btn btn-error flex-1" wire:click="confirmDelete" wire:loading.attr="disabled" wire:target="confirmDelete">Delete</button>
-                </div>
-            </div>
-        </div>
-    @endif
+    <x-confirm-delete
+        :show="$showDeleteModal"
+        title="Delete message?"
+        message="This will remove it from any plans it's attached to."
+        confirm="confirmDelete"
+        cancel="closeDeleteModal"
+    />
 </div>

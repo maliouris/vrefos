@@ -60,42 +60,24 @@
     </div>
 
     {{-- Category Delete Modal --}}
-    @if ($deletingCategoryId)
-        <div class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center" @click.self="$wire.closeCategoryModal()">
-            <div class="bg-base-100 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg">
-                <h3 class="text-lg font-bold mb-4">{{ $deleteModalTitle }}</h3>
-
-                <p class="mb-4">{{ $deleteModalMessage }}</p>
-
-                @if ($deleteModalType === 'blocked')
-                    <div class="mb-4 bg-base-200 p-3 rounded text-sm">
-                        <div class="font-semibold mb-2">Rules to change:</div>
-                        <ul class="space-y-1">
-                            @foreach ($blockingRules ?? [] as $rule)
-                                <li>• {{ $rule['title'] }} ({{ $rule['type'] }}, {{ $rule['delay'] }})</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-ghost flex-1" @click="$wire.closeCategoryModal()">Close</button>
-                    </div>
-                @elseif ($deleteModalType === 'warn')
-                    <div class="mb-4 bg-warning/20 p-3 rounded text-sm">
-                        <div class="font-semibold mb-2">Medications losing this category:</div>
-                        <ul class="space-y-1">
-                            @foreach ($uncategorizedMedications ?? [] as $medName)
-                                <li>• {{ $medName }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-ghost flex-1" @click="$wire.closeCategoryModal()">Cancel</button>
-                        <button class="btn btn-error flex-1" wire:click="confirmCategoryDelete({{ $deletingCategoryId }})">Delete</button>
-                    </div>
-                @endif
+    <x-confirm-delete
+        :show="(bool) $deletingCategoryId"
+        :title="$deleteModalTitle"
+        :message="$deleteModalMessage"
+        :confirm="'confirmCategoryDelete('.$deletingCategoryId.')'"
+        cancel="closeCategoryModal"
+    >
+        @if ($deleteModalType === 'warn')
+            <div class="mb-4 bg-warning/20 p-3 rounded text-sm">
+                <div class="font-semibold mb-2">Medications losing this category:</div>
+                <ul class="space-y-1">
+                    @foreach ($uncategorizedMedications ?? [] as $medName)
+                        <li>• {{ $medName }}</li>
+                    @endforeach
+                </ul>
             </div>
-        </div>
-    @endif
+        @endif
+    </x-confirm-delete>
 
     {{-- Add Category Modal --}}
     @if ($showAddCategoryModal)

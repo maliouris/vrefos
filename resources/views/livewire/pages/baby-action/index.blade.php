@@ -16,13 +16,7 @@
         </x-mary-alert>
     @else
         @php
-            $typeIcon = fn (?string $name): string => match (strtolower((string) $name)) {
-                'eat' => 'o-cake',
-                'sleep' => 'o-moon',
-                'temperature' => 'o-fire',
-                'medication' => 'o-beaker',
-                default => 'o-clock',
-            };
+            $typeIcon = \App\Models\BabyActionType::iconFor(...);
 
             $totalTime = fn ($action): string => $action->finished_at->diffForHumans($action->started_at, [
                 'parts' => 2,
