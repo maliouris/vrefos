@@ -10,7 +10,10 @@
                 class="shadow-sm cursor-pointer active:bg-base-200 transition-colors"
                 wire:key="baby-{{ $baby->id }}"
                 x-data
+                role="link"
+                tabindex="0"
                 @click="Livewire.navigate('{{ route('babies.edit', $baby) }}')"
+                @keydown.enter.self="Livewire.navigate('{{ route('babies.edit', $baby) }}')"
             >
                 <div class="flex items-center justify-between gap-2 mb-3">
                     <div class="flex items-center gap-2 min-w-0">
@@ -22,7 +25,7 @@
                 </div>
 
                 @if ($baby->birth_date)
-                    <div class="text-base text-base-content/60">
+                    <div class="text-base text-base-content/70">
                         Born: {{ $baby->birth_date->format('j M Y') }}
                     </div>
                 @endif
@@ -30,7 +33,7 @@
                 <x-mary-icon name="o-chevron-right" class="absolute bottom-5 right-5 text-base-content/30" />
             </x-mary-card>
         @empty
-            <div class="flex items-center gap-2 text-base-content/60">
+            <div class="flex items-center gap-2 text-base-content/70">
                 <x-mary-icon name="o-minus-circle" class="shrink-0" />
                 <span>No children added yet</span>
             </div>

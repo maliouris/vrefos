@@ -68,9 +68,9 @@
                                     <span class="whitespace-nowrap">
                                         <span class="font-medium">{{ $action->babyActionType?->name }}</span>
                                         @if ($action->finished_at === null)
-                                            <span class="text-base-content/60">· {{ $humanDiff($action->started_at) }}</span>
+                                            <span class="text-base-content/70">· {{ $humanDiff($action->started_at) }}</span>
                                         @else
-                                            <span class="text-base-content/60">· ended {{ $humanDiff($action->finished_at) }} ago</span>
+                                            <span class="text-base-content/70">· ended {{ $humanDiff($action->finished_at) }} ago</span>
                                         @endif
                                     </span>
                                 </div>
@@ -84,7 +84,7 @@
                                 @endif
                             </div>
                         @empty
-                            <div class="flex items-center gap-2 mb-2 text-base-content/60">
+                            <div class="flex items-center gap-2 mb-2 text-base-content/70">
                                 <x-mary-icon name="o-minus-circle" class="shrink-0" />
                                 <span>No actions yet</span>
                             </div>

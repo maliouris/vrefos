@@ -24,7 +24,7 @@
                         <x-mary-button
                             label="{{ $category->name }}"
                             wire:click="toggleCategory({{ $category->id }})"
-                            class="btn-sm {{ in_array($category->id, $categoryIds) ? 'btn-primary' : 'btn-outline' }}"
+                            aria-pressed="{{ in_array($category->id, $categoryIds) ? 'true' : 'false' }}" class="btn-sm {{ in_array($category->id, $categoryIds) ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>

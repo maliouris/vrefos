@@ -39,13 +39,13 @@
             <x-mary-button
                 label="All children"
                 wire:click="showAllBabies"
-                class="btn-sm {{ $activeBabyIds === [] ? 'btn-primary' : 'btn-outline' }}"
+                aria-pressed="{{ $activeBabyIds === [] ? 'true' : 'false' }}" class="btn-sm {{ $activeBabyIds === [] ? 'btn-primary' : 'btn-outline' }}"
             />
             @foreach ($babies as $baby)
                 <x-mary-button
                     label="{{ $baby->name }}"
                     wire:click="toggleActiveBaby({{ $baby->id }})"
-                    class="btn-sm {{ in_array($baby->id, $activeBabyIds) ? 'btn-primary' : 'btn-outline' }}"
+                    aria-pressed="{{ in_array($baby->id, $activeBabyIds) ? 'true' : 'false' }}" class="btn-sm {{ in_array($baby->id, $activeBabyIds) ? 'btn-primary' : 'btn-outline' }}"
                 />
             @endforeach
         </div>
@@ -68,11 +68,14 @@
             <x-mary-card
                 class="shadow-sm cursor-pointer active:bg-base-200 transition-colors"
                 wire:key="plan-{{ $plan->id }}"
+                role="button"
+                tabindex="0"
                 wire:click="openEdit({{ $plan->id }})"
+                wire:keydown.enter.self="openEdit({{ $plan->id }})"
             >
                 <div class="flex items-center gap-3 mb-3">
                     <div @click.stop>
-                        <x-mary-toggle wire:click="toggleEnabled({{ $plan->id }})" :checked="$plan->enabled" />
+                        <x-mary-toggle wire:click="toggleEnabled({{ $plan->id }})" :checked="$plan->enabled" aria-label="Enable {{ $plan->babyActionType->name }} plan" />
                     </div>
                     <span class="text-lg font-semibold truncate">{{ $plan->babyActionType->name }}</span>
                     @if ($plan->ends_on && $plan->ends_on->isPast())
@@ -83,7 +86,7 @@
                     @endif
                 </div>
 
-                <div class="text-base text-base-content/60 space-y-1.5">
+                <div class="text-base text-base-content/70 space-y-1.5">
                     @php($version = $plan->currentVersion())
                     @if ($version)
                         <div>
@@ -154,6 +157,7 @@
             @if ($editingId)
                 <x-mary-button
                     icon="o-trash"
+                    aria-label="Delete plan"
                     class="btn-circle btn-sm btn-ghost text-error"
                     wire:click="promptDeletePlan({{ $editingId }})"
                 />
@@ -169,7 +173,7 @@
                             <x-mary-button
                                 label="{{ $type->name }}"
                                 wire:click="$set('babyActionTypeId', {{ $type->id }})"
-                                class="btn-sm {{ $babyActionTypeId === $type->id ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $babyActionTypeId === $type->id ? 'true' : 'false' }}" class="btn-sm {{ $babyActionTypeId === $type->id ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -183,7 +187,7 @@
                             <x-mary-button
                                 label="{{ ucfirst($unit->value) }}"
                                 wire:click="toggleUnit('{{ $unit->value }}')"
-                                class="btn-sm {{ $intervalUnit === $unit->value ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $intervalUnit === $unit->value ? 'true' : 'false' }}" class="btn-sm {{ $intervalUnit === $unit->value ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -218,7 +222,7 @@
                                 <div class="flex items-center gap-2">
                                     <x-mary-input type="time" wire:model="times.{{ $i }}" class="flex-1" />
                                     @if (count($times) > 1)
-                                        <x-mary-button icon="o-x-mark" class="btn-sm btn-ghost" wire:click="removeTimeEntry({{ $i }})" />
+                                        <x-mary-button icon="o-x-mark" aria-label="Remove time" class="btn-sm btn-ghost" wire:click="removeTimeEntry({{ $i }})" />
                                     @endif
                                 </div>
                             @endforeach
@@ -235,7 +239,7 @@
                                 <x-mary-button
                                     label="{{ $label }}"
                                     wire:click="toggleWeekday({{ $iso }})"
-                                    class="btn-sm {{ in_array($iso, $weekdays) ? 'btn-primary' : 'btn-outline' }}"
+                                    aria-pressed="{{ in_array($iso, $weekdays) ? 'true' : 'false' }}" class="btn-sm {{ in_array($iso, $weekdays) ? 'btn-primary' : 'btn-outline' }}"
                                 />
                             @endforeach
                         </div>
@@ -266,13 +270,13 @@
                         <x-mary-button
                             label="All children"
                             wire:click="toggleAllChildren"
-                            class="btn-sm {{ $allChildren ? 'btn-primary' : 'btn-outline' }}"
+                            aria-pressed="{{ $allChildren ? 'true' : 'false' }}" class="btn-sm {{ $allChildren ? 'btn-primary' : 'btn-outline' }}"
                         />
                         @foreach ($babies as $baby)
                             <x-mary-button
                                 label="{{ $baby->name }}"
                                 wire:click="toggleTargetBaby({{ $baby->id }})"
-                                class="btn-sm {{ in_array($baby->id, $targetBabyIds) ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ in_array($baby->id, $targetBabyIds) ? 'true' : 'false' }}" class="btn-sm {{ in_array($baby->id, $targetBabyIds) ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -286,7 +290,7 @@
                             <x-mary-button
                                 label="{{ $notification->title }}"
                                 wire:click="toggleStartNotification({{ $notification->id }})"
-                                class="btn-sm {{ in_array($notification->id, $startNotificationIds) ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ in_array($notification->id, $startNotificationIds) ? 'true' : 'false' }}" class="btn-sm {{ in_array($notification->id, $startNotificationIds) ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -299,14 +303,14 @@
                 <div>
                     <label class="label"><span class="label-text">Notify at end</span></label>
                     @if (blank($durationMinutes))
-                        <p class="text-sm opacity-60">Set a duration above to enable end notifications.</p>
+                        <p class="text-sm opacity-70">Set a duration above to enable end notifications.</p>
                     @else
                         <div class="flex flex-wrap gap-2">
                             @foreach ($notifications as $notification)
                                 <x-mary-button
                                     label="{{ $notification->title }}"
                                     wire:click="toggleEndNotification({{ $notification->id }})"
-                                    class="btn-sm {{ in_array($notification->id, $endNotificationIds) ? 'btn-primary' : 'btn-outline' }}"
+                                    aria-pressed="{{ in_array($notification->id, $endNotificationIds) ? 'true' : 'false' }}" class="btn-sm {{ in_array($notification->id, $endNotificationIds) ? 'btn-primary' : 'btn-outline' }}"
                                 />
                             @endforeach
                         </div>

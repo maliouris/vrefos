@@ -15,7 +15,10 @@
                 <div
                     class="flex items-center justify-between gap-4 border-b py-3 last:border-b-0 cursor-pointer hover:bg-base-200 transition-colors p-3 -m-3"
                     x-data
+                    role="link"
+                    tabindex="0"
                     @click="Livewire.navigate('{{ route('medications.edit', $medication) }}')"
+                    @keydown.enter.self="Livewire.navigate('{{ route('medications.edit', $medication) }}')"
                 >
                     <div class="flex-1 min-w-0">
                         <div class="font-medium">{{ $medication->name }}</div>
@@ -49,6 +52,7 @@
                     </div>
                     <x-mary-button
                         icon="o-trash"
+                        aria-label="Delete category {{ $category->name }}"
                         class="btn-sm btn-ghost text-error"
                         wire:click="deleteCategory({{ $category->id }})"
                     />

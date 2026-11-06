@@ -14,7 +14,10 @@
         @forelse ($notifications as $notification)
             <div
                 class="flex items-center justify-between gap-4 border-b py-3 last:border-b-0 cursor-pointer hover:bg-base-200 transition-colors p-3 -m-3"
+                role="button"
+                tabindex="0"
                 wire:click="openEdit({{ $notification->id }})"
+                wire:keydown.enter.self="openEdit({{ $notification->id }})"
             >
                 <div class="flex-1 min-w-0">
                     <div class="font-medium truncate">{{ $notification->title }}</div>

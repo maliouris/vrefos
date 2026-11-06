@@ -8,7 +8,7 @@
                         <x-mary-button
                             label="{{ $b['name'] }}"
                             wire:click="toggleBaby({{ $b['id'] }})"
-                            class="btn-md {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            aria-pressed="{{ $baby_id === $b['id'] ? 'true' : 'false' }}" class="btn-md {{ $baby_id === $b['id'] ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -22,7 +22,7 @@
                         <x-mary-button
                             label="{{ $t['name'] }}"
                             wire:click="toggleActionType({{ $t['id'] }})"
-                            class="btn-md {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
+                            aria-pressed="{{ $baby_action_type_id === $t['id'] ? 'true' : 'false' }}" class="btn-md {{ $baby_action_type_id === $t['id'] ? 'btn-primary' : 'btn-outline' }}"
                         />
                     @endforeach
                 </div>
@@ -37,7 +37,7 @@
                             <x-mary-button
                                 label="{{ $ft['name'] }}"
                                 wire:click="toggleFoodType('{{ $ft['id'] }}')"
-                                class="btn-md {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $food_type === $ft['id'] ? 'true' : 'false' }}" class="btn-md {{ $food_type === $ft['id'] ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -64,7 +64,7 @@
                             <x-mary-button
                                 label="{{ $m['name'] }}"
                                 wire:click="toggleMedication({{ $m['id'] }})"
-                                class="btn-md {{ $medication_id === $m['id'] ? 'btn-primary' : 'btn-outline' }}"
+                                aria-pressed="{{ $medication_id === $m['id'] ? 'true' : 'false' }}" class="btn-md {{ $medication_id === $m['id'] ? 'btn-primary' : 'btn-outline' }}"
                             />
                         @endforeach
                     </div>
@@ -85,7 +85,7 @@
                                 <x-mary-button
                                     label="{{ $c['name'] }}"
                                     wire:click="toggleNewMedicationCategory({{ $c['id'] }})"
-                                    class="btn-sm {{ in_array($c['id'], $new_medication_category_ids) ? 'btn-primary' : 'btn-outline' }}"
+                                    aria-pressed="{{ in_array($c['id'], $new_medication_category_ids) ? 'true' : 'false' }}" class="btn-sm {{ in_array($c['id'], $new_medication_category_ids) ? 'btn-primary' : 'btn-outline' }}"
                                 />
                             @endforeach
                         </div>
@@ -113,8 +113,8 @@
                     get local() { return window.utcToLocalInput(this.utc) },
                     set local(value) { this.utc = window.localInputToUtc(value) },
                  }">
-                <label class="label"><span class="label-text">{{ $this->isInstantAction() ? 'Time' : 'Started At' }}</span></label>
-                <input type="datetime-local" x-model="local" required class="input input-bordered w-full" />
+                <label class="label" for="started-at"><span class="label-text">{{ $this->isInstantAction() ? 'Time' : 'Started At' }}</span></label>
+                <input id="started-at" type="datetime-local" x-model="local" required class="input input-bordered w-full" />
                 @error('started_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
             </div>
 
@@ -124,8 +124,8 @@
                         get local() { return window.utcToLocalInput(this.utc) },
                         set local(value) { this.utc = window.localInputToUtc(value) },
                      }">
-                    <label class="label"><span class="label-text">Finished At</span></label>
-                    <input type="datetime-local" x-model="local" class="input input-bordered w-full" />
+                    <label class="label" for="finished-at"><span class="label-text">Finished At</span></label>
+                    <input id="finished-at" type="datetime-local" x-model="local" class="input input-bordered w-full" />
                     @error('finished_at') <span class="text-error text-sm">{{ $message }}</span> @enderror
                 </div>
             @endunless

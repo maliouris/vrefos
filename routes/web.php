@@ -30,5 +30,3 @@ Route::get('/medications/{medication}/edit', MedicationEdit::class)->name('medic
 
 Route::get('/planning', PlanningIndex::class)->name('planning.show');
 Route::get('/notifications', NotificationIndex::class)->name('notifications.show');
-
-Route::get('/terms-and-conditions', fn () => view('legal.terms-and-conditions'));

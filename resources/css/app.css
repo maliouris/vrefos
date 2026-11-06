@@ -51,3 +51,9 @@ html {
         height: calc(100dvh - 4rem - 1px - env(safe-area-inset-top));
     }
 }
+
+/* Touch targets: daisyUI's btn-sm is 2rem (~36px at our 18px base), below the
+   44px guideline; btn-sm is used for primary touch actions throughout. */
+.btn-sm {
+    --size: 2.5rem;
+}
